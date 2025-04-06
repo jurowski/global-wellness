@@ -1,36 +1,31 @@
-import React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import Header from './components/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#1a1a1a',
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
-  title: 'Global Wellness Insights',
-  description: 'Explore global wellness metrics and societal structures across countries.',
-  keywords: 'wellness, global health, data visualization, societal structures, well-being metrics',
-  authors: [{ name: 'Global Wellness Insights Team' }],
-  openGraph: {
-    title: 'Global Wellness Insights',
-    description: 'Explore global wellness metrics and societal structures across countries.',
-    url: 'https://globalwellnessinsights.org',
-    siteName: 'Global Wellness Insights',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Global Wellness Insights',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
+  title: 'Global Wellness Dashboard',
+  description: 'Track and analyze global wellness metrics',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Global Wellness Insights',
-    description: 'Explore global wellness metrics and societal structures across countries.',
-    images: ['/og-image.png'],
+  themeColor: '#1a1a1a',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Global Wellness'
   },
 };
 
@@ -40,8 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={inter.className}>
+      <body suppressHydrationWarning className="bg-gray-900 text-white min-h-screen">
+        <Header />
+        <main className="container mx-auto px-4 py-8">{children}</main>
+      </body>
     </html>
   );
 } 

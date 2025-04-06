@@ -1,0 +1,535 @@
+// utils/dataFetching/worldBankData.js
+import axios from 'axios';
+
+// World Bank API endpoints
+const WORLD_BANK_API_BASE = 'https://api.worldbank.org/v2';
+const WORLD_BANK_INDICATOR_API = `${WORLD_BANK_API_BASE}/country/all/indicator`;
+
+// Indicator codes for relevant economic metrics
+const INDICATORS = {
+  GDP_PER_CAPITA: 'NY.GDP.PCAP.PP.CD', // GDP per capita, PPP (current international $)
+  GINI_INDEX: 'SI.POV.GINI', // GINI index
+  UNEMPLOYMENT: 'SL.UEM.TOTL.ZS', // Unemployment, total (% of labor force)
+  POVERTY_RATIO: 'SI.POV.DDAY', // Poverty headcount ratio at $2.15 a day (% of population)
+  INCOME_SHARE_TOP_10: 'SI.DST.10TH.10', // Income share held by highest 10%
+  INCOME_SHARE_BOTTOM_40: 'SI.DST.FRST.40', // Income share held by lowest 40%
+  TAX_REVENUE: 'GC.TAX.TOTL.GD.ZS', // Tax revenue (% of GDP)
+  INFLATION: 'FP.CPI.TOTL.ZG', // Inflation, consumer prices (annual %)
+  MARKET_CAPITALIZATION: 'CM.MKT.LCAP.GD.ZS', // Market capitalization of listed domestic companies (% of GDP)
+  RESEARCH_EXPENDITURE: 'GB.XPD.RSDV.GD.ZS', // Research and development expenditure (% of GDP)
+};
+
+/**
+ * Fetches economic data from World Bank
+ * @param {Object} options - Configuration options
+ * @returns {Promise<Array>} - Processed World Bank data by country
+ */
+export async function fetchWorldBankData(options = {}) {
+  try {
+    // Fetch general economic indicators
+    const economicData = await fetchEconomicIndicators();
+    
+    // Fetch inequality indicators
+    const inequalityData = await fetchInequalityIndicators();
+    
+    // Fetch labor market indicators
+    const laborData = await fetchLaborMarketIndicators();
+    
+    // Fetch innovation and infrastructure indicators
+    const innovationData = await fetchInnovationIndicators();
+    
+    // Merge all World Bank datasets
+    const mergedData = mergeWorldBankDatasets(
+      economicData, 
+      inequalityData, 
+      laborData, 
+      innovationData
+    );
+    
+    return mergedData;
+  } catch (error) {
+    console.error('Error fetching World Bank data:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetches general economic indicators
+ * @returns {Promise<Array>} - Economic indicator data by country
+ */
+async function fetchEconomicIndicators() {
+  try {
+    // In a real implementation, you would fetch data from World Bank API
+    // For this example, we'll simulate some economic indicator data
+    
+    const simulatedData = [
+      {
+        country: 'United States',
+        countryCode: 'USA',
+        metrics: {
+          gdp_per_capita: 70248, // GDP per capita, PPP (current international $)
+          gdp_growth: 2.1, // GDP growth (annual %)
+          inflation: 4.7, // Inflation, consumer prices (annual %)
+          tax_revenue_pct_gdp: 11.8, // Tax revenue (% of GDP)
+          current_account_balance: -3.7, // Current account balance (% of GDP)
+        },
+        year: 2022
+      },
+      {
+        country: 'Germany',
+        countryCode: 'DEU',
+        metrics: {
+          gdp_per_capita: 57928,
+          gdp_growth: 1.8,
+          inflation: 6.5,
+          tax_revenue_pct_gdp: 23.2,
+          current_account_balance: 7.4,
+        },
+        year: 2022
+      },
+      {
+        country: 'Japan',
+        countryCode: 'JPN',
+        metrics: {
+          gdp_per_capita: 44934,
+          gdp_growth: 1.0,
+          inflation: 2.5,
+          tax_revenue_pct_gdp: 17.1,
+          current_account_balance: 1.8,
+        },
+        year: 2022
+      },
+      {
+        country: 'Sweden',
+        countryCode: 'SWE',
+        metrics: {
+          gdp_per_capita: 55815,
+          gdp_growth: 2.6,
+          inflation: 8.4,
+          tax_revenue_pct_gdp: 42.6,
+          current_account_balance: 6.7,
+        },
+        year: 2022
+      },
+      {
+        country: 'Finland',
+        countryCode: 'FIN',
+        metrics: {
+          gdp_per_capita: 49988,
+          gdp_growth: 2.1,
+          inflation: 7.2,
+          tax_revenue_pct_gdp: 41.5,
+          current_account_balance: 0.9,
+        },
+        year: 2022
+      },
+      // Add more countries...
+    ];
+    
+    return simulatedData.map(country => ({
+      ...country,
+      source: {
+        gdp_per_capita: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.GDP_PER_CAPITA}`,
+          year: country.year
+        },
+        gdp_growth: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/NY.GDP.MKTP.KD.ZG`,
+          year: country.year
+        },
+        inflation: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.INFLATION}`,
+          year: country.year
+        },
+        tax_revenue_pct_gdp: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.TAX_REVENUE}`,
+          year: country.year
+        },
+        current_account_balance: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/BN.CAB.XOKA.GD.ZS`,
+          year: country.year
+        }
+      }
+    }));
+  } catch (error) {
+    console.error('Error fetching economic indicators:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetches inequality indicators
+ * @returns {Promise<Array>} - Inequality indicator data by country
+ */
+async function fetchInequalityIndicators() {
+  try {
+    // Simulate inequality data based on World Bank indicators
+    const simulatedData = [
+      {
+        country: 'United States',
+        countryCode: 'USA',
+        metrics: {
+          gini_index: 41.5, // GINI index (0=perfect equality, 100=perfect inequality)
+          income_share_top_10: 30.5, // Income share held by highest 10%
+          income_share_bottom_40: 15.4, // Income share held by lowest 40%
+          poverty_ratio: 1.0, // Poverty headcount ratio at $2.15 a day (% of population)
+          wealth_inequality: 85.1, // Wealth share held by top 10% (%)
+        },
+        year: 2020 // Most recent available data
+      },
+      {
+        country: 'Germany',
+        countryCode: 'DEU',
+        metrics: {
+          gini_index: 31.7,
+          income_share_top_10: 24.6,
+          income_share_bottom_40: 20.4,
+          poverty_ratio: 0.2,
+          wealth_inequality: 64.7,
+        },
+        year: 2020
+      },
+      {
+        country: 'Japan',
+        countryCode: 'JPN',
+        metrics: {
+          gini_index: 32.9,
+          income_share_top_10: 26.4,
+          income_share_bottom_40: 19.8,
+          poverty_ratio: 0.7,
+          wealth_inequality: 60.8,
+        },
+        year: 2020
+      },
+      {
+        country: 'Sweden',
+        countryCode: 'SWE',
+        metrics: {
+          gini_index: 28.8,
+          income_share_top_10: 22.7,
+          income_share_bottom_40: 21.5,
+          poverty_ratio: 0.3,
+          wealth_inequality: 73.2,
+        },
+        year: 2020
+      },
+      {
+        country: 'Finland',
+        countryCode: 'FIN',
+        metrics: {
+          gini_index: 27.5,
+          income_share_top_10: 22.1,
+          income_share_bottom_40: 22.4,
+          poverty_ratio: 0.1,
+          wealth_inequality: 45.2,
+        },
+        year: 2020
+      },
+      // Add more countries...
+    ];
+    
+    return simulatedData.map(country => ({
+      ...country,
+      source: {
+        gini_index: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.GINI_INDEX}`,
+          year: country.year
+        },
+        income_share_top_10: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.INCOME_SHARE_TOP_10}`,
+          year: country.year
+        },
+        income_share_bottom_40: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.INCOME_SHARE_BOTTOM_40}`,
+          year: country.year
+        },
+        poverty_ratio: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.POVERTY_RATIO}`,
+          year: country.year
+        },
+        wealth_inequality: {
+          name: 'World Inequality Database',
+          url: 'https://wid.world/data/',
+          year: country.year
+        }
+      }
+    }));
+  } catch (error) {
+    console.error('Error fetching inequality indicators:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetches labor market indicators
+ * @returns {Promise<Array>} - Labor market data by country
+ */
+async function fetchLaborMarketIndicators() {
+  try {
+    // Simulate labor market data based on World Bank indicators
+    const simulatedData = [
+      {
+        country: 'United States',
+        countryCode: 'USA',
+        metrics: {
+          unemployment: 3.5, // Unemployment, total (% of labor force)
+          youth_unemployment: 8.2, // Unemployment, youth (% of labor force ages 15-24)
+          labor_force_participation: 61.8, // Labor force participation rate (% of population ages 15+)
+          long_term_unemployment: 0.3, // Long-term unemployment (% of total unemployment)
+          informal_employment: 18.6, // Informal employment (% of total non-agricultural employment)
+        },
+        year: 2022
+      },
+      {
+        country: 'Germany',
+        countryCode: 'DEU',
+        metrics: {
+          unemployment: 3.0,
+          youth_unemployment: 5.8,
+          labor_force_participation: 61.5,
+          long_term_unemployment: 1.2,
+          informal_employment: 7.8,
+        },
+        year: 2022
+      },
+      {
+        country: 'Japan',
+        countryCode: 'JPN',
+        metrics: {
+          unemployment: 2.6,
+          youth_unemployment: 4.1,
+          labor_force_participation: 63.0,
+          long_term_unemployment: 1.4,
+          informal_employment: 13.5,
+        },
+        year: 2022
+      },
+      {
+        country: 'Sweden',
+        countryCode: 'SWE',
+        metrics: {
+          unemployment: 7.4,
+          youth_unemployment: 22.1,
+          labor_force_participation: 73.3,
+          long_term_unemployment: 1.0,
+          informal_employment: 8.2,
+        },
+        year: 2022
+      },
+      {
+        country: 'Finland',
+        countryCode: 'FIN',
+        metrics: {
+          unemployment: 6.8,
+          youth_unemployment: 17.6,
+          labor_force_participation: 67.5,
+          long_term_unemployment: 1.7,
+          informal_employment: 6.3,
+        },
+        year: 2022
+      },
+      // Add more countries...
+    ];
+    
+    return simulatedData.map(country => ({
+      ...country,
+      source: {
+        unemployment: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.UNEMPLOYMENT}`,
+          year: country.year
+        },
+        youth_unemployment: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/SL.UEM.1524.ZS`,
+          year: country.year
+        },
+        labor_force_participation: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/SL.TLF.CACT.ZS`,
+          year: country.year
+        },
+        long_term_unemployment: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/SL.UEM.LTRM.ZS`,
+          year: country.year
+        },
+        informal_employment: {
+          name: 'International Labour Organization',
+          url: 'https://ilostat.ilo.org/topics/informality/',
+          year: country.year
+        }
+      }
+    }));
+  } catch (error) {
+    console.error('Error fetching labor market indicators:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetches innovation and infrastructure indicators
+ * @returns {Promise<Array>} - Innovation data by country
+ */
+async function fetchInnovationIndicators() {
+  try {
+    // Simulate innovation data based on World Bank indicators
+    const simulatedData = [
+      {
+        country: 'United States',
+        countryCode: 'USA',
+        metrics: {
+          research_expenditure: 3.45, // Research and development expenditure (% of GDP)
+          researchers_per_million: 4821, // Researchers in R&D (per million people)
+          scientific_articles: 422808, // Scientific and technical journal articles
+          patent_applications: 269586, // Patent applications, residents
+          internet_users: 91.2, // Individuals using the Internet (% of population)
+        },
+        year: 2021
+      },
+      {
+        country: 'Germany',
+        countryCode: 'DEU',
+        metrics: {
+          research_expenditure: 3.13,
+          researchers_per_million: 5212,
+          scientific_articles: 103122,
+          patent_applications: 46582,
+          internet_users: 92.0,
+        },
+        year: 2021
+      },
+      {
+        country: 'Japan',
+        countryCode: 'JPN',
+        metrics: {
+          research_expenditure: 3.26,
+          researchers_per_million: 5304,
+          scientific_articles: 96536,
+          patent_applications: 253630,
+          internet_users: 92.7,
+        },
+        year: 2021
+      },
+      {
+        country: 'Sweden',
+        countryCode: 'SWE',
+        metrics: {
+          research_expenditure: 3.39,
+          researchers_per_million: 7536,
+          scientific_articles: 21854,
+          patent_applications: 1580,
+          internet_users: 96.5,
+        },
+        year: 2021
+      },
+      {
+        country: 'Finland',
+        countryCode: 'FIN',
+        metrics: {
+          research_expenditure: 2.94,
+          researchers_per_million: 6707,
+          scientific_articles: 10599,
+          patent_applications: 1392,
+          internet_users: 94.5,
+        },
+        year: 2021
+      },
+      // Add more countries...
+    ];
+    
+    return simulatedData.map(country => ({
+      ...country,
+      source: {
+        research_expenditure: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_INDICATOR_API}/${INDICATORS.RESEARCH_EXPENDITURE}`,
+          year: country.year
+        },
+        researchers_per_million: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/SP.POP.SCIE.RD.P6`,
+          year: country.year
+        },
+        scientific_articles: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/IP.JRN.ARTC.SC`,
+          year: country.year
+        },
+        patent_applications: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/IP.PAT.RESD`,
+          year: country.year
+        },
+        internet_users: {
+          name: 'World Bank',
+          url: `${WORLD_BANK_API_BASE}/country/all/indicator/IT.NET.USER.ZS`,
+          year: country.year
+        }
+      }
+    }));
+  } catch (error) {
+    console.error('Error fetching innovation indicators:', error);
+    return [];
+  }
+}
+
+/**
+ * Merges multiple World Bank datasets into one unified dataset
+ * @param {...Array} datasets - World Bank datasets to merge
+ * @returns {Array} - Merged dataset
+ */
+function mergeWorldBankDatasets(...datasets) {
+  const mergedCountries = {};
+  
+  // Process each dataset
+  datasets.forEach(dataset => {
+    dataset.forEach(countryData => {
+      const countryName = countryData.country;
+      
+      // Initialize country if not exists
+      if (!mergedCountries[countryName]) {
+        mergedCountries[countryName] = {
+          country: countryName,
+          countryCode: countryData.countryCode,
+          metrics: {},
+          source: {}
+        };
+      }
+      
+      // Merge metrics
+      if (countryData.metrics) {
+        mergedCountries[countryName].metrics = {
+          ...mergedCountries[countryName].metrics,
+          ...countryData.metrics
+        };
+      }
+      
+      // Merge sources
+      if (countryData.source) {
+        mergedCountries[countryName].source = {
+          ...mergedCountries[countryName].source,
+          ...countryData.source
+        };
+      }
+      
+      // Use the most recent year
+      if (countryData.year) {
+        if (!mergedCountries[countryName].year || countryData.year > mergedCountries[countryName].year) {
+          mergedCountries[countryName].year = countryData.year;
+        }
+      }
+    });
+  });
+  
+  return Object.values(mergedCountries);
+}

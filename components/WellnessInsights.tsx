@@ -19,33 +19,41 @@ import {
   Radar,
 } from 'recharts';
 
-interface DataQuality {
-  reliability: number;
-  sampleSize: string;
-  updateFrequency: string;
-  confidenceInterval: string;
-  methodology: string;
-}
-
-interface Metric {
+interface WellnessMetric {
   id: string;
   name: string;
   description: string;
   source: string;
-  citation: string;
-  sourceLink: string;
-  dataQuality: DataQuality;
+  dataQuality?: {
+    reliability: number;
+    sampleSize: string;
+    updateFrequency: string;
+    confidenceInterval: string;
+    methodology: string;
+  };
 }
 
-interface WellnessData {
-  country: string;
-  metrics: Record<string, number>;
-  year: number;
+interface GlobalData {
+  countries: string[];
+  metrics: Record<string, Record<string, number>>;
+  sources: string[];
 }
+
+interface TrendData {
+  name: string;
+  [key: string]: number | string;
+}
+
+interface ComparisonData {
+  country: string;
+  [key: string]: number | string;
+}
+
+type ChartData = TrendData | ComparisonData;
 
 interface WellnessInsightsProps {
-  data: WellnessData[];
-  metrics: Metric[];
+  data: GlobalData;
+  metrics: WellnessMetric[];
 }
 
 const CHART_COLORS = [
@@ -64,80 +72,100 @@ const CHART_COLORS = [
 export default function WellnessInsights({ data, metrics }: WellnessInsightsProps) {
   const [selectedView, setSelectedView] = React.useState('trends');
 
-  const formatData = () => {
+  const formatData = (): ChartData[] => {
+    if (!data || !data.metrics || Object.keys(data.metrics).length === 0) {
+      return [];
+    }
+
+    // Only use the selected countries that have data
+    const selectedCountries = data.countries;
+
     if (selectedView === 'trends') {
-      // Group data by year for line chart
-      return data.reduce((acc, entry) => {
-        const yearData = acc.find(d => d.year === entry.year);
-        if (yearData) {
-          yearData[entry.country] = entry.metrics;
-        } else {
-          acc.push({
-            year: entry.year,
-            ...Object.fromEntries([[entry.country, entry.metrics]]),
-          });
-        }
-        return acc;
-      }, [] as any[]).sort((a, b) => a.year - b.year);
+      return Object.entries(data.metrics).map(([metricId, countryValues]): TrendData => {
+        const filteredData: Record<string, number | string> = {
+          name: metrics.find(m => m.id === metricId)?.name || metricId,
+        };
+        
+        // Only include data for selected countries
+        selectedCountries.forEach(country => {
+          if (countryValues[country] !== undefined) {
+            filteredData[country] = countryValues[country];
+          }
+        });
+        
+        return filteredData as TrendData;
+      }).filter(data => {
+        // Remove metrics that have no data for any selected country
+        const hasData = selectedCountries.some(country => data[country] !== undefined);
+        return hasData;
+      });
     } else if (selectedView === 'comparison') {
-      // Latest year data for bar chart
-      const latestYear = Math.max(...data.map(d => d.year));
-      return data
-        .filter(d => d.year === latestYear)
-        .map(d => ({
-          country: d.country,
-          ...d.metrics,
-        }));
+      return selectedCountries.map((country): ComparisonData => ({
+        country,
+        ...Object.entries(data.metrics).reduce((acc, [metricId, countryValues]) => ({
+          ...acc,
+          [metricId]: countryValues[country] || 0
+        }), {})
+      }));
     } else {
-      // Radar chart data
-      const latestYear = Math.max(...data.map(d => d.year));
-      return data
-        .filter(d => d.year === latestYear)
-        .map(d => ({
-          ...d.metrics,
-          country: d.country,
-        }));
+      return selectedCountries.map((country): ComparisonData => ({
+        country,
+        ...Object.entries(data.metrics).reduce((acc, [metricId, countryValues]) => ({
+          ...acc,
+          [metrics.find(m => m.id === metricId)?.name || metricId]: countryValues[country] || 0
+        }), {})
+      }));
     }
   };
 
   const renderChart = () => {
     const formattedData = formatData();
 
-    if (selectedView === 'trends') {
+    if (!formattedData || formattedData.length === 0) {
       return (
-        <div style={{ width: '100%', height: 400 }}>
+        <div className="flex items-center justify-center h-[300px] bg-background-light rounded-lg">
+          <p className="text-text-secondary">No data available</p>
+        </div>
+      );
+    }
+
+    if (selectedView === 'trends') {
+      const trendData = formattedData as TrendData[];
+      const countriesWithData = Object.keys(trendData[0] || {}).filter(key => key !== 'name');
+      
+      return (
+        <div style={{ width: '100%', height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formattedData}>
+            <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
               <XAxis
-                dataKey="year"
+                dataKey="name"
                 stroke="var(--text-secondary)"
-                tick={{ fill: 'var(--text-secondary)' }}
+                tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
               />
               <YAxis
                 stroke="var(--text-secondary)"
-                tick={{ fill: 'var(--text-secondary)' }}
+                tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
               />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'var(--background-light)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '0.5rem',
+                  fontSize: '12px'
                 }}
               />
-              <Legend />
-              {Object.keys(formattedData[0] || {})
-                .filter(key => key !== 'year')
-                .map((country, index) => (
-                  <Line
-                    key={country}
-                    type="monotone"
-                    dataKey={country}
-                    stroke={CHART_COLORS[index % CHART_COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ fill: CHART_COLORS[index % CHART_COLORS.length] }}
-                  />
-                ))}
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
+              {countriesWithData.map((country, index) => (
+                <Line
+                  key={country}
+                  type="monotone"
+                  dataKey={country}
+                  stroke={CHART_COLORS[index % CHART_COLORS.length]}
+                  strokeWidth={2}
+                  dot={{ fill: CHART_COLORS[index % CHART_COLORS.length], r: 4 }}
+                />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -216,16 +244,16 @@ export default function WellnessInsights({ data, metrics }: WellnessInsightsProp
   };
 
   return (
-    <div className="bg-card-bg rounded-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-text-primary">
+    <div className="bg-card-bg rounded-lg p-4">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium text-text-primary">
           Wellness Insights
         </h3>
-        <div className="flex space-x-2">
+        <div className="flex space-x-1">
           <button
             onClick={() => setSelectedView('trends')}
             className={`
-              px-3 py-1.5 rounded-md text-sm font-medium
+              px-2 py-1 rounded-md text-xs font-medium
               transition-colors duration-200 ease-in-out
               ${
                 selectedView === 'trends'
@@ -239,7 +267,7 @@ export default function WellnessInsights({ data, metrics }: WellnessInsightsProp
           <button
             onClick={() => setSelectedView('comparison')}
             className={`
-              px-3 py-1.5 rounded-md text-sm font-medium
+              px-2 py-1 rounded-md text-xs font-medium
               transition-colors duration-200 ease-in-out
               ${
                 selectedView === 'comparison'
@@ -253,7 +281,7 @@ export default function WellnessInsights({ data, metrics }: WellnessInsightsProp
           <button
             onClick={() => setSelectedView('radar')}
             className={`
-              px-3 py-1.5 rounded-md text-sm font-medium
+              px-2 py-1 rounded-md text-xs font-medium
               transition-colors duration-200 ease-in-out
               ${
                 selectedView === 'radar'

@@ -7,31 +7,37 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/global-wellness.git"
+    "url": "https://github.com/jurowski/global-wellness.git"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/kill-ports.js && next dev",
+    "build": "npm run generate-icons && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^3.6.0",
+    "@stripe/stripe-js": "^7.0.0",
     "@tailwindcss/typography": "^0.5.10",
     "axios": "^1.6.7",
-    "next": "14.1.0",
+    "next": "^14.2.26",
     "react": "^18",
     "react-dom": "^18",
-    "recharts": "^2.12.0"
+    "recharts": "^2.12.0",
+    "stripe": "^18.0.0"
   },
   "devDependencies": {
     "@types/node": "20.17.30",
     "@types/react": "18.3.20",
     "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
+    "autoprefixer": "^10.4.21",
     "eslint": "^8",
     "eslint-config-next": "14.1.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
+    "postcss": "^8.5.3",
+    "sharp": "^0.34.0",
+    "tailwindcss": "^3.4.17",
+    "ts-loader": "^9.5.2",
     "typescript": "5.8.3"
   }
 }

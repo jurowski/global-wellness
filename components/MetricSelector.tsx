@@ -31,75 +31,52 @@ export default function MetricSelector({
   selectedMetrics,
   setSelectedMetrics,
 }: MetricSelectorProps) {
-  const handleMetricToggle = (metricId: string) => {
-    if (selectedMetrics.includes(metricId)) {
-      setSelectedMetrics(selectedMetrics.filter(id => id !== metricId));
-    } else {
-      setSelectedMetrics([...selectedMetrics, metricId]);
-    }
-  };
-
   return (
-    <div className="bg-card-bg rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">
-        Select Metrics
-      </h3>
-      <div className="space-y-4">
-        {metrics.map((metric) => (
-          <div key={metric.id} className="relative">
-            <button
-              onClick={() => handleMetricToggle(metric.id)}
-              className={`
-                w-full text-left px-4 py-3 rounded-lg
-                transition-colors duration-200 ease-in-out
-                ${
+    <div className="w-full">
+      <h3 className="text-xs font-medium text-text-secondary mb-1">Select Metrics</h3>
+      <div className="max-h-[200px] overflow-y-auto bg-background-dark rounded-lg text-xs">
+        <div className="p-2">
+          {metrics.map(metric => (
+            <div key={metric.id} className="mb-1 last:mb-0">
+              <button
+                onClick={() => {
+                  if (selectedMetrics.includes(metric.id)) {
+                    setSelectedMetrics(selectedMetrics.filter(id => id !== metric.id));
+                  } else {
+                    setSelectedMetrics([...selectedMetrics, metric.id]);
+                  }
+                }}
+                className={`w-full text-left px-2 py-0.5 rounded group ${
                   selectedMetrics.includes(metric.id)
                     ? 'bg-accent-primary text-white'
-                    : 'bg-background-light text-text-secondary hover:bg-accent-secondary/20'
-                }
-              `}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-medium">{metric.name}</h4>
-                  <p className="text-sm mt-1 opacity-90">{metric.description}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-right">
+                    : 'hover:bg-accent-secondary/20'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{metric.name}</span>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-[10px] opacity-60">
+                      {metric.dataQuality.confidenceInterval}
+                    </span>
                     <div className="flex items-center">
-                      <span className="text-xs opacity-75 mr-2">Reliability:</span>
-                      <div className="w-16 bg-background-dark rounded-full h-1.5">
-                        <div
-                          className="bg-green-500 h-1.5 rounded-full"
+                      <span className="text-[10px] opacity-60 mr-1">Reliability:</span>
+                      <div className="w-12 bg-background-light rounded-full h-1.5">
+                        <div 
+                          className="bg-green-500 h-1.5 rounded-full" 
                           style={{ width: `${metric.dataQuality.reliability * 100}%` }}
-                        />
+                        ></div>
                       </div>
                     </div>
-                    <p className="text-xs mt-1 opacity-75">
-                      CI: {metric.dataQuality.confidenceInterval}
-                    </p>
                   </div>
                 </div>
-              </div>
-              <div className="mt-2 text-xs opacity-75">
-                <a
-                  href={metric.sourceLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:no-underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {metric.source}
-                </a>
-              </div>
-            </button>
-          </div>
-        ))}
+                <p className="text-[10px] opacity-60 mt-0.5">{metric.description}</p>
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="mt-4">
-        <p className="text-sm text-text-secondary">
-          Selected: {selectedMetrics.length} / {metrics.length}
-        </p>
+      <div className="text-xs text-text-secondary mt-1">
+        Selected: {selectedMetrics.length} / {metrics.length}
       </div>
     </div>
   );

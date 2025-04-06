@@ -6,8 +6,6 @@ interface SocietalStructure {
   id: string;
   name: string;
   description: string;
-  impact: string;
-  sources: string[];
 }
 
 interface SocietalStructuresContextType {
@@ -16,60 +14,37 @@ interface SocietalStructuresContextType {
   setSelectedStructures: (structures: string[]) => void;
 }
 
-const defaultStructures: SocietalStructure[] = [
-  {
-    id: 'education_system',
-    name: 'Education System',
-    description: 'The formal and informal systems of learning and knowledge transfer',
-    impact: 'Directly influences cognitive development, social mobility, and economic opportunities',
-    sources: [
-      'UNESCO Global Education Monitoring Report',
-      'OECD Education at a Glance',
-    ],
-  },
-  {
-    id: 'healthcare_access',
-    name: 'Healthcare Access',
-    description: 'The availability and accessibility of medical care and health services',
-    impact: 'Affects physical and mental well-being, life expectancy, and quality of life',
-    sources: [
-      'WHO Global Health Observatory',
-      'World Bank Health Statistics',
-    ],
-  },
-  {
-    id: 'social_support',
-    name: 'Social Support Systems',
-    description: 'Networks and institutions providing community and individual support',
-    impact: 'Influences mental health, resilience, and social cohesion',
-    sources: [
-      'World Happiness Report',
-      'OECD Better Life Index',
-    ],
-  },
-  {
-    id: 'work_life_balance',
-    name: 'Work-Life Balance',
-    description: 'The relationship between professional and personal life',
-    impact: 'Affects stress levels, family relationships, and overall life satisfaction',
-    sources: [
-      'ILO Working Conditions Reports',
-      'OECD Work-Life Balance Index',
-    ],
-  },
-];
+const SocietalStructuresContext = createContext<SocietalStructuresContextType>({
+  structures: [],
+  selectedStructures: [],
+  setSelectedStructures: () => {},
+});
 
-const SocietalStructuresContext = createContext<SocietalStructuresContextType | undefined>(undefined);
+export const useSocietalStructures = () => useContext(SocietalStructuresContext);
 
-interface SocietalStructuresProviderProps {
-  children: React.ReactNode;
-}
+export const SocietalStructuresProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [selectedStructures, setSelectedStructures] = useState<string[]>([]);
 
-export function SocietalStructuresProvider({ children }: SocietalStructuresProviderProps) {
-  const [selectedStructures, setSelectedStructures] = useState([]);
+  const structures: SocietalStructure[] = [
+    {
+      id: 'capitalism',
+      name: 'Capitalism',
+      description: 'Market-based economic system with private ownership',
+    },
+    {
+      id: 'socialism',
+      name: 'Socialism',
+      description: 'Economic system with collective ownership and distribution',
+    },
+    {
+      id: 'mixed',
+      name: 'Mixed Economy',
+      description: 'Combination of market and government intervention',
+    },
+  ];
 
   const value = {
-    structures: defaultStructures,
+    structures,
     selectedStructures,
     setSelectedStructures,
   };
@@ -79,12 +54,4 @@ export function SocietalStructuresProvider({ children }: SocietalStructuresProvi
       {children}
     </SocietalStructuresContext.Provider>
   );
-}
-
-export function useSocietalStructures() {
-  const context = useContext(SocietalStructuresContext);
-  if (context === undefined) {
-    throw new Error('useSocietalStructures must be used within a SocietalStructuresProvider');
-  }
-  return context;
-} 
+}; 

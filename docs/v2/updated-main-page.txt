@@ -1,0 +1,209 @@
+// Updated portions of pages/index.js to use the comprehensive data
+
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import axios from 'axios';
+import WellnessComparison from '../components/WellnessComparison';
+import CountrySelector from '../components/CountrySelector';
+import MetricSelector from '../components/MetricSelector';
+import WellnessInsights from '../components/WellnessInsights';
+import SocietalStructuresContext from '../components/SocietalStructuresContext';
+import EducationalResources from '../components/EducationalResources';
+import FAQ from '../components/FAQ';
+import DataSourcesInfo from '../components/DataSourcesInfo'; // New component for attribution
+
+// Define metric categories based on our new data structure
+const METRIC_CATEGORIES = [
+  {
+    id: 'happiness',
+    name: 'Happiness & Life Satisfaction',
+    description: 'Measures of subjective well-being and happiness',
+    metrics: [
+      { id: 'happiness', name: 'Happiness Index', description: 'World Happiness Report score (0-100)', source: 'World Happiness Report' },
+      { id: 'life_satisfaction', name: 'Life Satisfaction', description: 'Self-reported life satisfaction', source: 'OECD Better Life Index' },
+    ]
+  },
+  {
+    id: 'health',
+    name: 'Healthcare & Health Outcomes',
+    description: 'Metrics related to healthcare systems and population health',
+    metrics: [
+      { id: 'healthy_life_expectancy', name: 'Healthy Life Expectancy', description: 'Years of life in good health', source: 'WHO' },
+      { id: 'life_expectancy', name: 'Life Expectancy', description: 'Average lifespan in years', source: 'WHO' },
+      { id: 'uhc_index', name: 'Universal Healthcare Coverage', description: 'Access to essential health services (0-100)', source: 'WHO' },
+      { id: 'health_expenditure_pct_gdp', name: 'Health Expenditure', description: '% of GDP spent on healthcare', source: 'World Bank' },
+      { id: 'govt_health_expenditure', name: 'Public Healthcare Funding', description: '% of health spending from government', source: 'WHO' },
+      { id: 'out_of_pocket', name: 'Out-of-Pocket Costs', description: '% of health spending paid directly by patients', source: 'WHO' },
+      { id: 'healthcare_efficiency', name: 'Healthcare Efficiency', description: 'Life expectancy relative to spending', source: 'Derived Metric' },
+    ]
+  },
+  {
+    id: 'education',
+    name: 'Education',
+    description: 'Education quality, access, and outcomes',
+    metrics: [
+      { id: 'education_index', name: 'Education Index', description: 'UN HDI education component (0-1)', source: 'UN Development Programme' },
+      { id: 'expected_years_schooling', name: 'Expected Years of Schooling', description: 'Years a child can expect to spend in education', source: 'UNESCO' },
+      { id: 'mean_years_schooling', name: 'Mean Years of Schooling', description: 'Average years of education completed by adults', source: 'UNESCO' },
+      { id: 'education_expenditure', name: 'Education Expenditure', description: '% of GDP spent on education', source: 'UNESCO' },
+      { id: 'tertiary_enrollment', name: 'Tertiary Enrollment', description: '% of population enrolled in higher education', source: 'UNESCO' },
+    ]
+  },
+  {
+    id: 'work_life',
+    name: 'Work-Life Balance',
+    description: 'Balance between work and personal time',
+    metrics: [
+      { id: 'work_life_balance', name: 'Work-Life Balance Score', description: 'Overall score for balance between work and personal life', source: 'OECD Better Life Index' },
+      { id: 'working_hours', name: 'Annual Working Hours', description: 'Average hours worked per year', source: 'OECD' },
+      { id: 'time_off', name: 'Paid Time Off', description: 'Days of paid leave and holidays per year', source: 'OECD' },
+      { id: 'leisure_time', name: 'Daily Leisure Time', description: 'Minutes of leisure time per day', source: 'OECD Time Use Database' },
+    ]
+  },
+  {
+    id: 'economy',
+    name: 'Economic Indicators',
+    description: 'Economic performance and living standards',
+    metrics: [
+      { id: 'gdp_per_capita', name: 'GDP per Capita', description: 'GDP per person (PPP, Int$)', source: 'World Bank' },
+      { id: 'unemployment', name: 'Unemployment Rate', description: '% of labor force unemployed', source: 'World Bank' },
+      { id: 'youth_unemployment', name: 'Youth Unemployment', description: '% of youth labor force unemployed', source: 'World Bank' },
+      { id: 'tax_revenue_pct_gdp', name: 'Tax Revenue', description: '% of GDP collected in taxes', source: 'World Bank' },
+    ]
+  },
+  {
+    id: 'inequality',
+    name: 'Equality & Inclusion',
+    description: 'Income distribution and social equity',
+    metrics: [
+      { id: 'gini_index', name: 'Income Inequality (Gini)', description: 'Gini coefficient (0=perfect equality, 100=perfect inequality)', source: 'World Bank' },
+      { id: 'income_share_top_10', name: 'Top 10% Income Share', description: '% of income held by richest 10%', source: 'World Bank' },
+      { id: 'income_share_bottom_40', name: 'Bottom 40% Income Share', description: '% of income held by poorest 40%', source: 'World Bank' },
+      { id: 'gender_inequality_index', name: 'Gender Inequality', description: 'UN Gender Inequality Index (0=equality, 1=inequality)', source: 'UN Development Programme' },
+      { id: 'female_seats_parliament', name: 'Women in Parliament', description: '% of parliamentary seats held by women', source: 'Inter-Parliamentary Union' },
+    ]
+  },
+  {
+    id: 'social',
+    name: 'Social Capital & Community',
+    description: 'Social connections and community well-being',
+    metrics: [
+      { id: 'social_support', name: 'Social Support', description: 'Perceived social support network', source: 'World Happiness Report' },
+      { id: 'community', name: 'Community Quality', description: 'Quality of local community', source: 'OECD Better Life Index' },
+      { id: 'freedom', name: 'Freedom', description: 'Freedom to make life choices', source: 'World Happiness Report' },
+      { id: 'generosity', name: 'Generosity', description: 'Generosity and helping behavior', source: 'World Happiness Report' },
+      { id: 'corruption', name: 'Corruption Perception', description: 'Perceived levels of public sector corruption', source: 'World Happiness Report' },
+      { id: 'safety', name: 'Safety Index', description: 'Perceived safety and crime rates', source: 'OECD Better Life Index' },
+    ]
+  },
+  {
+    id: 'innovation',
+    name: 'Innovation & Research',
+    description: 'Investment in future development and knowledge',
+    metrics: [
+      { id: 'research_expenditure', name: 'R&D Expenditure', description: '% of GDP spent on research and development', source: 'World Bank' },
+      { id: 'researchers_per_million', name: 'Researchers', description: 'Researchers in R&D per million people', source: 'World Bank' },
+      { id: 'scientific_articles', name: 'Scientific Output', description: 'Scientific and technical journal articles published', source: 'World Bank' },
+      { id: 'patent_applications', name: 'Patent Applications', description: 'Patent applications by residents', source: 'World Bank' },
+    ]
+  }
+];
+
+export default function Home() {
+  const [selectedCountries, setSelectedCountries] = useState(['USA', 'Finland', 'Japan', 'Germany', 'Costa Rica']);
+  const [selectedMetrics, setSelectedMetrics] = useState(['happiness', 'healthcare', 'education', 'work_life']);
+  const [wellnessData, setWellnessData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('/api/wellness-data', {
+          params: { 
+            countries: selectedCountries.join(','),
+            metrics: selectedMetrics.join(',')
+          }
+        });
+        setWellnessData(response.data);
+      } catch (error) {
+        console.error('Error fetching wellness data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [selectedCountries, selectedMetrics]);
+
+  // Flatten metrics for easier access in components
+  const flattenedMetrics = METRIC_CATEGORIES.reduce(
+    (acc, category) => [...acc, ...category.metrics], 
+    []
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <Head>
+        <title>Global Wellness Perspectives</title>
+        <meta name="description" content="Expanding perspectives through global wellness comparisons" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+            Global Wellness Perspectives
+          </h1>
+          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
+            Explore how different societal structures correlate with wellness outcomes around the world.
+          </p>
+        </div>
+
+        <div className="bg-white shadow rounded-lg p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CountrySelector 
+              selectedCountries={selectedCountries} 
+              setSelectedCountries={setSelectedCountries} 
+            />
+            <MetricSelector 
+              categories={METRIC_CATEGORIES}
+              selectedMetrics={selectedMetrics} 
+              setSelectedMetrics={setSelectedMetrics} 
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : wellnessData ? (
+          <>
+            <WellnessComparison data={wellnessData} metrics={flattenedMetrics} />
+            <DataSourcesInfo wellnessData={wellnessData} />
+            <SocietalStructuresContext selectedCountries={selectedCountries} />
+            <WellnessInsights data={wellnessData} metrics={flattenedMetrics} />
+            <EducationalResources />
+            <FAQ />
+          </>
+        ) : (
+          <div className="text-center text-gray-500">
+            No data available. Please adjust your selection.
+          </div>
+        )}
+      </main>
+
+      <footer className="bg-white mt-12 py-6 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-gray-500 text-sm">
+            Data sources include: World Happiness Report, WHO, UN Human Development Index, World Bank, Global Peace Index, OECD Better Life Index
+          </p>
+          <p className="text-center text-gray-400 text-xs mt-2">
+            This application uses a mix of verified data from international organizations and simulated data for demonstration purposes.
+            Simulated data points are clearly marked and should not be used for research or decision-making.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
