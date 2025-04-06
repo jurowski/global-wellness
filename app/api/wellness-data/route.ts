@@ -195,7 +195,6 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const requestedCountries = searchParams.get('countries')?.split(',').map(country => {
-      // Handle both "USA" and "United States" to be consistent
       return country === 'USA' ? 'United States' : country;
     }) || [];
     const requestedMetrics = searchParams.get('metrics')?.split(',') || [];

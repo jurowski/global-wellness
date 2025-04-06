@@ -9,19 +9,18 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#1a1a1a',
+  themeColor: [{ media: '(prefers-color-scheme: dark)', color: '#1a1a1a' }],
   viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {
   title: 'Global Wellness Dashboard',
   description: 'Track and analyze global wellness metrics',
-  manifest: '/manifest.json',
+  manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/icon-192.png',
+    icon: '/icon-192x192.png',
     apple: '/apple-touch-icon.png',
   },
-  themeColor: '#1a1a1a',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

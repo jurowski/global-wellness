@@ -156,14 +156,14 @@ export default function WellnessInsights({ data, metrics }: WellnessInsightsProp
                 }}
               />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
-              {countriesWithData.map((country, index) => (
+              {countriesWithData.map((country, _index) => (
                 <Line
                   key={country}
                   type="monotone"
                   dataKey={country}
-                  stroke={CHART_COLORS[index % CHART_COLORS.length]}
+                  stroke={CHART_COLORS[_index % CHART_COLORS.length]}
                   strokeWidth={2}
-                  dot={{ fill: CHART_COLORS[index % CHART_COLORS.length], r: 4 }}
+                  dot={{ fill: CHART_COLORS[_index % CHART_COLORS.length], r: 4 }}
                 />
               ))}
             </LineChart>
@@ -195,12 +195,12 @@ export default function WellnessInsights({ data, metrics }: WellnessInsightsProp
                 }}
               />
               <Legend />
-              {metrics.map((metric, index) => (
+              {metrics.map((metric, _index) => (
                 <Bar
                   key={metric.id}
                   dataKey={metric.id}
                   name={metric.name}
-                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                  fill={CHART_COLORS[_index % CHART_COLORS.length]}
                 />
               ))}
             </BarChart>

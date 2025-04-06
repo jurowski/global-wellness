@@ -345,12 +345,26 @@ export default function LocationComparison({ metrics, globalData }: LocationComp
   };
 
   const prepareComparisonData = () => {
-    if (!locationState.data || !locationState.country) return [];
-    return sortData(locationState.data).map(item => ({
-      ...item,
-      name: formatMetricName(item.name)
-    }));
+    return metrics.map(metric => {
+      // Get the US value
+      const usValue = globalData.metrics[metric]?.['United States'] || 0;
+      
+      // Calculate global average excluding US
+      const otherCountries = globalData.countries.filter(c => c !== 'United States');
+      const globalValues = otherCountries.map(country => globalData.metrics[metric]?.[country] || 0);
+      const globalAverage = globalValues.length > 0 
+        ? globalValues.reduce((sum, val) => sum + val, 0) / globalValues.length 
+        : 0;
+
+      return {
+        name: metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        'United States': usValue,
+        'Global Average': globalAverage
+      };
+    });
   };
+
+  const data = prepareComparisonData();
 
   if (locationState.loading) {
     return (
@@ -382,7 +396,7 @@ export default function LocationComparison({ metrics, globalData }: LocationComp
   return (
     <div className="bg-card-bg rounded-lg p-4">
       <h3 className="text-sm font-medium text-text-primary mb-2">
-        How {locationState.country} Compares Globally
+        How United States Compares Globally
       </h3>
       <div className="flex gap-2 mb-2 text-xs">
         <button
@@ -413,7 +427,7 @@ export default function LocationComparison({ metrics, globalData }: LocationComp
       <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={prepareComparisonData()}
+            data={data}
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
@@ -430,20 +444,14 @@ export default function LocationComparison({ metrics, globalData }: LocationComp
               tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
               width={120}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--background-light)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '0.5rem',
-                fontSize: '12px'
-              }}
-            />
-            <Bar dataKey="value" fill="var(--accent-primary)" radius={[0, 4, 4, 0]} />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="United States" fill="#4a90e2" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="Global Average" fill="#82ca9d" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
       <p className="text-xs text-text-secondary mt-2 text-center">
-        This chart compares wellness metrics in {locationState.country} with global averages. Higher values indicate better outcomes.
+        This chart compares wellness metrics in United States with global averages. Higher values indicate better outcomes.
       </p>
       {locationState.detailedView && locationState.selectedMetric && (
         <DetailedMetricView
