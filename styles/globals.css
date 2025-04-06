@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background-dark: #0f172a;
+  --background-light: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #60a5fa;
+  --border-color: #334155;
+  --card-bg: #1e293b;
+  --hover-bg: #334155;
+}
+
+@layer base {
+  body {
+    @apply bg-background-dark text-text-primary;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-card-bg rounded-lg shadow-lg border border-border-color;
+  }
+  
+  .btn-primary {
+    @apply bg-accent-primary text-white px-4 py-2 rounded-md hover:bg-accent-secondary transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-background-light text-text-primary px-4 py-2 rounded-md hover:bg-hover-bg transition-colors;
+  }
+  
+  .input-field {
+    @apply bg-background-light text-text-primary border border-border-color rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent-primary;
+  }
+
+  /* Add prose styling for dark theme */
+  .prose {
+    @apply text-text-secondary;
+  }
+
+  .prose strong {
+    @apply text-text-primary;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    @apply text-text-primary;
+  }
+
+  .prose ul, .prose ol {
+    @apply text-text-secondary;
+  }
+
+  .prose li {
+    @apply text-text-secondary;
+  }
+
+  .prose p {
+    @apply text-text-secondary;
+  }
+
+  .prose a {
+    @apply text-accent-primary hover:text-accent-secondary;
+  }
+} 

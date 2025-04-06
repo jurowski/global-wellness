@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark theme colors */
+  --background-dark: #111827;  /* gray-900 */
+  --background-light: #1f2937; /* gray-800 */
+  --card-bg: #1f2937;         /* gray-800 */
+  --border-color: #374151;    /* gray-700 */
+  --text-primary: #f3f4f6;    /* gray-100 */
+  --text-secondary: #9ca3af;  /* gray-400 */
+  --accent-primary: #3b82f6;  /* blue-500 */
+  --accent-secondary: #60a5fa; /* blue-400 */
+}
+
+body {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 6px;
+  border: 3px solid var(--background-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Prose styles for dark theme */
+.prose {
+  color: var(--text-secondary);
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: var(--text-primary);
+}
+
+.prose strong {
+  color: var(--text-primary);
+}
+
+.prose a {
+  color: var(--accent-primary);
+}
+
+.prose a:hover {
+  color: var(--accent-secondary);
+}
+
+.prose code {
+  color: var(--text-primary);
+  background-color: var(--background-dark);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+}
+
+.prose pre {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+}
+
+.prose ul > li::before {
+  background-color: var(--text-secondary);
+}
+
+.prose blockquote {
+  color: var(--text-secondary);
+  border-left-color: var(--border-color);
+}
+
+/* Chart customization */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--border-color);
+}
+
+.recharts-text {
+  fill: var(--text-secondary);
+}
+
+.recharts-legend-item-text {
+  color: var(--text-secondary) !important;
+}
+
+.recharts-tooltip-wrapper {
+  background-color: var(--background-light) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.5rem !important;
+}
+
+.recharts-default-tooltip {
+  background-color: var(--background-light) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.5rem !important;
+}
+
+.recharts-tooltip-label {
+  color: var(--text-primary) !important;
+}
+
+.recharts-tooltip-item-list {
+  color: var(--text-secondary) !important;
+} 
