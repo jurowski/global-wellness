@@ -56,7 +56,7 @@ module.exports = withSentryConfig(
   nextConfig,
   {
     silent: true,
-    org: "your-org-name",
+    org: "sandon-jurowskis-projects",
     project: "global-wellness",
   },
   {
