@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -48,6 +50,19 @@ const nextConfig = {
     // Don't run type checking during production builds
     ignoreBuildErrors: true
   }
-}
+};
 
-module.exports = nextConfig 
+module.exports = withSentryConfig(
+  nextConfig,
+  {
+    silent: true,
+    org: "your-org-name",
+    project: "global-wellness",
+  },
+  {
+    widenClientFileUpload: true,
+    transpileClientSDK: true,
+    tunnelRoute: "/monitoring-tunnel",
+    hideSourceMaps: true,
+  }
+); 

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import Header from './components/Header';
 
@@ -40,6 +41,7 @@ export default function RootLayout({
         <Header />
         <main className="container mx-auto px-4 py-8">{children}</main>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
