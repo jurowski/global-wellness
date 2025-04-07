@@ -1,24 +1,25 @@
 const sharp = require('sharp');
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 
 async function generateIcons() {
-  const sizes = [
-    { size: 192, name: 'icon-192.png' },
-    { size: 512, name: 'icon-512.png' },
-    { size: 180, name: 'apple-touch-icon.png' }
-  ];
+  const sizes = [192, 512];
+  const svgBuffer = fs.readFileSync(path.join(process.cwd(), 'public', 'icon.svg'));
 
-  const svgBuffer = await fs.readFile(path.join(__dirname, '../public/icon.svg'));
-
-  for (const { size, name } of sizes) {
+  for (const size of sizes) {
     await sharp(svgBuffer)
       .resize(size, size)
       .png()
-      .toFile(path.join(__dirname, '../public', name));
-    
-    console.log(`Generated ${name}`);
+      .toFile(path.join(process.cwd(), 'public', `icon-${size}x${size}.png`));
   }
+
+  // Generate Apple touch icon
+  await sharp(svgBuffer)
+    .resize(180, 180)
+    .png()
+    .toFile(path.join(process.cwd(), 'public', 'apple-touch-icon.png'));
+
+  console.log('Icons generated successfully!');
 }
 
 generateIcons().catch(console.error); 

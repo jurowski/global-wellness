@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Error({
@@ -10,8 +11,9 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  React.useEffect(() => {
-    console.error('Application error:', error);
+  useEffect(() => {
+    // Log the error to Sentry
+    Sentry.captureException(error);
   }, [error]);
 
   return (

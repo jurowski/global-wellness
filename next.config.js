@@ -3,31 +3,11 @@ const { withSentryConfig } = require('@sentry/nextjs');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   images: {
+    unoptimized: true,
     domains: ['vercel.com'],
     formats: ['image/avif', 'image/webp'],
-  },
-  headers: async () => {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, stale-while-revalidate=86400',
-          },
-        ],
-      },
-    ];
   },
   experimental: {
     optimizeCss: true,
@@ -49,7 +29,14 @@ const nextConfig = {
   typescript: {
     // Don't run type checking during production builds
     ignoreBuildErrors: true
-  }
+  },
+  // Ensure proper static file generation
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
+  // Optimize static file caching
+  generateEtags: false,
+  compress: true,
 };
 
 module.exports = withSentryConfig(

@@ -1,7 +1,7 @@
 const CACHE_NAME = 'global-wellness-v1';
 const STATIC_ASSETS = [
   '/',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/icon-192x192.png',
   '/icon-512x512.png',
   '/donors'
