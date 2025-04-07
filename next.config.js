@@ -2,7 +2,34 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['vercel.com', 'localhost'],
+    domains: ['vercel.com'],
+    formats: ['image/avif', 'image/webp'],
+  },
+  headers: async () => {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+    ];
+  },
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['@vercel/speed-insights'],
   },
   webpack: (config) => {
     // SVG handling
