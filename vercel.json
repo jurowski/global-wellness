@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51RB2q2PPrCzV7JNoRZX79EpHgDUpLwHLKYBvbBqPGh2RCsLJxucsE0Oh08N9FsrzfzzjNJJUpa6MCKdk5C84y9hf00DFHT8YTA",
+    "STRIPE_SECRET_KEY": "sk_test_51RB2q2PPrCzV7JNo7yvkigvTIa3P8gARIRsWbFMqpbPTIUfS5juqhy9KZvgCrfNrrqF4BhDcVeWSE2fiIWdAgNc900MVVj5PlZ",
+    "NEXT_PUBLIC_OPENCAGE_API_KEY": "3394e988b92c4a769472028915eabf89"
+  }
+} 
