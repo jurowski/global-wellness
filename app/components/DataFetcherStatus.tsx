@@ -1,58 +1,74 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DataSource } from '../utils/dataFetching/types';
+import { countryProfiles } from '../api/wellness-data/route';
 
 interface FetcherStatus {
   name: string;
   lastFetch: string;
   status: 'active' | 'inactive' | 'error';
   isEnabled: boolean;
+  coverage: string;
+  metrics: string[];
 }
 
-const fetcherNames: DataSource[] = [
-  'WHO', 'OECD', 'UN', 'WorldBank', 'WorldHappiness', 'IMF', 'WEF', 'Gallup',
-  'WVS', 'Eurostat', 'ESS', 'EQLS', 'WVS7', 'ESS10', 'WVS8', 'ESS11', 'WVS9',
-  'ESS12', 'WVS10', 'ESS13', 'WVS11', 'ESS14', 'WVS12', 'ESS15', 'WVS13',
-  'ESS16', 'WVS14', 'ESS17', 'WVS15', 'ESS18', 'WVS16', 'ESS19', 'WVS17'
-];
+// Get unique data sources and their metrics from country profiles
+const getDataSources = () => {
+  const sources = new Map<string, Set<string>>();
+  
+  Object.values(countryProfiles).forEach(country => {
+    Object.entries(country).forEach(([key, value]) => {
+      if (value && typeof value === 'object' && 'source' in value) {
+        const metric = value as { source: string; category: string; isRealData: boolean };
+        if (!sources.has(metric.source)) {
+          sources.set(metric.source, new Set());
+        }
+        sources.get(metric.source)?.add(metric.category);
+      }
+    });
+  });
+
+  return Array.from(sources.entries()).map(([source, metrics]) => ({
+    name: source,
+    metrics: Array.from(metrics)
+  }));
+};
 
 export default function DataFetcherStatus() {
   const [fetcherStatuses, setFetcherStatuses] = useState<FetcherStatus[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Load initial statuses from localStorage or API
-    const loadStatuses = async () => {
-      const storedStatuses = localStorage.getItem('fetcherStatuses');
-      if (storedStatuses) {
-        setFetcherStatuses(JSON.parse(storedStatuses));
-      } else {
-        // Initialize with default values
-        const initialStatuses = fetcherNames.map(name => ({
-          name,
-          lastFetch: 'Never',
-          status: 'inactive' as const,
-          isEnabled: true
-        }));
-        setFetcherStatuses(initialStatuses);
-        localStorage.setItem('fetcherStatuses', JSON.stringify(initialStatuses));
-      }
-    };
+    // Initialize with real data sources
+    const dataSources = getDataSources();
+    const initialStatuses = dataSources.map(({ name, metrics }) => {
+      const countryCount = Object.values(countryProfiles).filter(country => 
+        Object.values(country).some(value => 
+          value && typeof value === 'object' && 'source' in value && value.source === name
+        )
+      ).length;
+      
+      return {
+        name,
+        lastFetch: new Date().toLocaleDateString(),
+        status: 'active' as const,
+        isEnabled: true,
+        coverage: `${countryCount}/${Object.keys(countryProfiles).length} countries`,
+        metrics
+      };
+    });
 
-    loadStatuses();
+    setFetcherStatuses(initialStatuses);
   }, []);
 
   const toggleFetcher = (name: string) => {
-    setFetcherStatuses(prev => {
-      const newStatuses = prev.map(status => 
+    setFetcherStatuses(prev => 
+      prev.map(status => 
         status.name === name 
           ? { ...status, isEnabled: !status.isEnabled }
           : status
-      );
-      localStorage.setItem('fetcherStatuses', JSON.stringify(newStatuses));
-      return newStatuses;
-    });
+      )
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -83,10 +99,16 @@ export default function DataFetcherStatus() {
           <thead>
             <tr className="bg-gray-100">
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fetcher
+                Data Source
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Fetch
+                Last Update
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Coverage
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Metrics
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -106,6 +128,12 @@ export default function DataFetcherStatus() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {status.lastFetch}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {status.coverage}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {status.metrics.join(', ')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(status.status)} text-white`}>

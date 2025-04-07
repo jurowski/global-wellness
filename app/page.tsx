@@ -9,6 +9,7 @@ import MetricSelector from './components/MetricSelector';
 
 export default function Home() {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['happiness', 'healthcare', 'education', 'work_life']);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(['United States', 'Japan']);
 
   const handleMetricSelect = (metric: string) => {
     setSelectedMetrics(prev =>
@@ -16,6 +17,10 @@ export default function Home() {
         ? prev.filter(m => m !== metric)
         : [...prev, metric]
     );
+  };
+
+  const handleCountryChange = (country1: string, country2: string) => {
+    setSelectedCountries([country1, country2]);
   };
 
   return (
@@ -31,12 +36,16 @@ export default function Home() {
               <MetricSelector
                 selectedMetrics={selectedMetrics}
                 onMetricSelect={handleMetricSelect}
+                selectedCountries={selectedCountries}
               />
             </div>
           </div>
 
           <div className="lg:col-span-8">
-            <CountryComparison selectedMetrics={selectedMetrics} />
+            <CountryComparison
+              selectedMetrics={selectedMetrics}
+              onCountryChange={handleCountryChange}
+            />
           </div>
         </div>
 

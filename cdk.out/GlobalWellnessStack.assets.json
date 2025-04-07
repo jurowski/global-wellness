@@ -1,0 +1,36 @@
+{
+  "version": "41.0.0",
+  "files": {
+    "63321d876e9470d81860b986c896fe6afcba3eb8eaab8bd8d8175651402494e2": {
+      "displayName": "WorldHappinessFunction/Code",
+      "source": {
+        "path": "asset.63321d876e9470d81860b986c896fe6afcba3eb8eaab8bd8d8175651402494e2",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "881097718012-us-east-1": {
+          "bucketName": "cdk-hnb659fds-assets-881097718012-us-east-1",
+          "objectKey": "63321d876e9470d81860b986c896fe6afcba3eb8eaab8bd8d8175651402494e2.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::881097718012:role/cdk-hnb659fds-file-publishing-role-881097718012-us-east-1"
+        }
+      }
+    },
+    "a7384f982cf772a13a3c9d49d9625edad17fa5f70c0dcd51d633c996380235bc": {
+      "displayName": "GlobalWellnessStack Template",
+      "source": {
+        "path": "GlobalWellnessStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "881097718012-us-east-1": {
+          "bucketName": "cdk-hnb659fds-assets-881097718012-us-east-1",
+          "objectKey": "a7384f982cf772a13a3c9d49d9625edad17fa5f70c0dcd51d633c996380235bc.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::881097718012:role/cdk-hnb659fds-file-publishing-role-881097718012-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

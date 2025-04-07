@@ -6,24 +6,33 @@ import { ResponsiveContainer } from 'recharts';
 const GET_WELLNESS_DATA = gql`
   query GetWellnessData($countries: [String!], $metrics: [String!]) {
     wellnessData(countries: $countries, metrics: $metrics) {
+      name
+      code
       happiness {
         value
+        year
       }
       healthcare {
         value
+        year
       }
       education {
         value
+        year
       }
       work_life {
         value
+        year
       }
       social_support {
         value
+        year
       }
     }
   }
 `;
+
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#ff8042'];
 
 const METRICS = [
   { id: 'happiness', label: 'Happiness' },
@@ -75,6 +84,9 @@ export default function MetricHeatmap() {
   return (
     <div className="bg-gray-800 rounded-lg p-6">
       <h3 className="text-xl font-semibold mb-4">Metric Correlations</h3>
+      <div className="text-sm text-gray-400 mb-4">
+        Data from {data?.wellnessData?.[0]?.happiness?.year || 2023}
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>

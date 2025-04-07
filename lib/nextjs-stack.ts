@@ -1,61 +1,82 @@
 import * as cdk from 'aws-cdk-lib';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import { Construct } from 'constructs';
 
 export class NextjsStack extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create S3 bucket for hosting
-    const bucket = new s3.Bucket(this, 'NextjsBucket', {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      websiteIndexDocument: 'index.html',
-      websiteErrorDocument: 'index.html',
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    // Create DynamoDB table for happiness data
+    const happinessTable = new dynamodb.Table(this, 'HappinessTable', {
+      partitionKey: { name: 'countryYear', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'country', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // For development only
     });
 
-    // Create CloudFront distribution
-    const distribution = new cloudfront.Distribution(this, 'NextjsDistribution', {
-      defaultBehavior: {
-        origin: new origins.S3Origin(bucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+    // Add GSI for querying by year
+    happinessTable.addGlobalSecondaryIndex({
+      indexName: 'yearIndex',
+      partitionKey: { name: 'year', type: dynamodb.AttributeType.NUMBER },
+      sortKey: { name: 'rank', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // Create a Lambda function for World Happiness Report data
+    const worldHappinessFunction = new lambda.Function(this, 'WorldHappinessFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/world-happiness/dist'),
+      environment: {
+        TABLE_NAME: happinessTable.tableName,
+        TABLE_YEAR_INDEX: 'yearIndex',
       },
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-        },
-      ],
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 1024,
     });
 
-    // Create IAM role for deployment
-    const deploymentRole = new iam.Role(this, 'DeploymentRole', {
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    // Create a Lambda function for updating happiness data
+    const worldHappinessUpdaterFunction = new lambda.Function(this, 'WorldHappinessUpdaterFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/world-happiness-updater/dist'),
+      environment: {
+        TABLE_NAME: happinessTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(300), // 5 minutes
+      memorySize: 1024,
     });
 
-    // Grant permissions to the deployment role
-    bucket.grantReadWrite(deploymentRole);
-
-    // Deploy the Next.js build output
-    new s3deploy.BucketDeployment(this, 'DeployNextjs', {
-      sources: [s3deploy.Source.asset('../.next/standalone')],
-      destinationBucket: bucket,
-      distribution,
-      distributionPaths: ['/*'],
-      role: deploymentRole,
+    // Create an EventBridge rule to trigger the updater function daily
+    const rule = new events.Rule(this, 'WorldHappinessUpdateRule', {
+      schedule: events.Schedule.rate(cdk.Duration.days(1)),
+      targets: [new targets.LambdaFunction(worldHappinessUpdaterFunction)],
     });
 
-    // Output the CloudFront URL
-    new cdk.CfnOutput(this, 'DistributionDomainName', {
-      value: distribution.distributionDomainName,
+    // Grant the Lambda functions access to DynamoDB
+    happinessTable.grantReadData(worldHappinessFunction);
+    happinessTable.grantWriteData(worldHappinessUpdaterFunction);
+
+    // Create an API Gateway
+    const api = new apigateway.RestApi(this, 'WellnessApi', {
+      restApiName: 'Global Wellness API',
+      description: 'API for Global Wellness Dashboard',
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+      },
+    });
+
+    // Add World Happiness endpoint
+    const happiness = api.root.addResource('happiness');
+    happiness.addMethod('GET', new apigateway.LambdaIntegration(worldHappinessFunction));
+
+    // Output the API Gateway URL
+    new cdk.CfnOutput(this, 'ApiUrl', {
+      value: api.url,
     });
   }
 } 

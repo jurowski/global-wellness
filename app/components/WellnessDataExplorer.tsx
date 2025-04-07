@@ -31,6 +31,7 @@ const GET_REGIONAL_AVERAGES = gql`
       region
       average
       sampleSize
+      year
     }
   }
 `;
@@ -139,6 +140,9 @@ export default function WellnessDataExplorer() {
           </div>
           {trendsData && (
             <div className="h-80">
+              <div className="text-sm text-gray-400 mb-4">
+                Historical data from {trendsData.getTrends[0]?.year || 2023} to {trendsData.getTrends[trendsData.getTrends.length - 1]?.year || 2023}
+              </div>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendsData.getTrends}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -162,6 +166,9 @@ export default function WellnessDataExplorer() {
           <h3 className="text-xl font-semibold mb-4">Regional Averages</h3>
           {regionalData && (
             <div className="h-80">
+              <div className="text-sm text-gray-400 mb-4">
+                Regional averages from {regionalData.getRegionalAverages[0]?.year || 2023}
+              </div>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -174,7 +181,7 @@ export default function WellnessDataExplorer() {
                     label
                   >
                     {regionalData.getRegionalAverages.map((entry: any, index: number) => (
-                      <Cell key={entry.region} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />

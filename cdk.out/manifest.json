@@ -1,0 +1,186 @@
+{
+  "version": "41.0.0",
+  "artifacts": {
+    "GlobalWellnessStack2.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "GlobalWellnessStack2.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "GlobalWellnessStack2": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://881097718012/us-east-1",
+      "properties": {
+        "templateFile": "GlobalWellnessStack2.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::881097718012:role/cdk-hnb659fds-deploy-role-881097718012-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::881097718012:role/cdk-hnb659fds-cfn-exec-role-881097718012-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-881097718012-us-east-1/19fb74942d515907c756ddf12e6850fb23ca045278538f09daf2ed3532b1b035.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "GlobalWellnessStack2.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::881097718012:role/cdk-hnb659fds-lookup-role-881097718012-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "GlobalWellnessStack2.assets"
+      ],
+      "metadata": {
+        "/GlobalWellnessStack2/HappinessTable/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HappinessTableD068FD54"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessFunctionServiceRoleE8E0453E"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessFunctionServiceRoleDefaultPolicy3801E60B"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessFunctionF4BC9A76"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessUpdaterFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessUpdaterFunctionServiceRole80CF7220"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessUpdaterFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessUpdaterFunctionServiceRoleDefaultPolicyDE05E20E"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessUpdaterFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessUpdaterFunctionF500CAB5"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessUpdateRule/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessUpdateRule4D72DAF2"
+          }
+        ],
+        "/GlobalWellnessStack2/WorldHappinessUpdateRule/AllowEventRuleGlobalWellnessStack2WorldHappinessUpdaterFunctionB2D539C5": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WorldHappinessUpdateRuleAllowEventRuleGlobalWellnessStack2WorldHappinessUpdaterFunctionB2D539C505589477"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApi5F797A40"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApiDeploymentF7566996727304577f19e913fda4be6f5c8fbbee"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApiDeploymentStageprod82CFECF8"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApiEndpoint2D40F23F"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApiOPTIONSF2244758"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Default/happiness/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApihappiness9C7EC670"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Default/happiness/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApihappinessOPTIONS76F6F286"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Default/happiness/GET/ApiPermission.GlobalWellnessStack2WellnessApi5AF71857.GET..happiness": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApihappinessGETApiPermissionGlobalWellnessStack2WellnessApi5AF71857GEThappiness17CAAF89"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Default/happiness/GET/ApiPermission.Test.GlobalWellnessStack2WellnessApi5AF71857.GET..happiness": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApihappinessGETApiPermissionTestGlobalWellnessStack2WellnessApi5AF71857GEThappiness4E91248B"
+          }
+        ],
+        "/GlobalWellnessStack2/WellnessApi/Default/happiness/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WellnessApihappinessGET6291930B"
+          }
+        ],
+        "/GlobalWellnessStack2/ApiUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiUrl"
+          }
+        ],
+        "/GlobalWellnessStack2/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/GlobalWellnessStack2/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/GlobalWellnessStack2/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "GlobalWellnessStack2"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  },
+  "minimumCliVersion": "2.1005.0"
+}

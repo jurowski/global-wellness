@@ -1,0 +1,23 @@
+{
+  "name": "world-happiness-updater",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && cp package.json dist/ && cd dist && npm install --production",
+    "watch": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Lambda function for updating World Happiness Report data in DynamoDB",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.535.0",
+    "@aws-sdk/lib-dynamodb": "^3.535.0",
+    "axios": "^1.6.8"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.136",
+    "typescript": "^5.4.2"
+  }
+} 

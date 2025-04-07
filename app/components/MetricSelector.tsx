@@ -2,6 +2,14 @@
 
 import { useState } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useQuery, gql } from '@apollo/client';
+
+interface MetricAvailability {
+  metric: string;
+  isAvailable: boolean;
+  source: string;
+  lastUpdated?: string;
+}
 
 interface MetricCategory {
   id: string;
@@ -10,83 +18,83 @@ interface MetricCategory {
   metrics: string[];
 }
 
+const GET_AVAILABLE_METRICS = gql`
+  query GetAvailableMetrics($countries: [String!]!) {
+    availableMetrics(countries: $countries) {
+      metric
+      isAvailable
+      source
+      lastUpdated
+    }
+  }
+`;
+
 const METRIC_CATEGORIES: MetricCategory[] = [
   {
     id: 'personal',
     name: 'Personal Well-being',
     icon: '😊',
-    metrics: ['happiness', 'life_satisfaction', 'mental_health']
+    metrics: ['happiness']
   },
   {
     id: 'health',
     name: 'Health & Healthcare',
     icon: '🏥',
-    metrics: ['healthcare', 'physical_health', 'healthcare_access']
+    metrics: ['healthcare']
   },
   {
     id: 'education',
     name: 'Education & Learning',
     icon: '📚',
-    metrics: ['education', 'lifelong_learning', 'skill_development']
+    metrics: ['education']
   },
   {
     id: 'work',
     name: 'Work & Economic Well-being',
     icon: '💼',
-    metrics: ['work_life', 'income', 'job_satisfaction']
-  },
-  {
-    id: 'environment',
-    name: 'Environment & Sustainability',
-    icon: '🌱',
-    metrics: ['air_quality', 'green_spaces', 'sustainability']
+    metrics: ['work_life']
   },
   {
     id: 'social',
     name: 'Social Connections & Community',
     icon: '👥',
-    metrics: ['social_support', 'community_engagement', 'relationships']
-  },
-  {
-    id: 'digital',
-    name: 'Digital Well-being & Technology',
-    icon: '💻',
-    metrics: ['digital_access', 'online_safety', 'tech_literacy']
-  },
-  {
-    id: 'cultural',
-    name: 'Cultural & Creative Well-being',
-    icon: '🎨',
-    metrics: ['cultural_participation', 'creative_expression', 'arts_access']
-  },
-  {
-    id: 'food',
-    name: 'Food & Nutrition Well-being',
-    icon: '🍎',
-    metrics: ['food_security', 'nutrition_quality', 'sustainable_food']
-  },
-  {
-    id: 'urban',
-    name: 'Urban & Housing Well-being',
-    icon: '🏘️',
-    metrics: ['housing_quality', 'urban_planning', 'public_spaces']
-  },
-  {
-    id: 'safety',
-    name: 'Safety & Security Well-being',
-    icon: '🛡️',
-    metrics: ['personal_safety', 'financial_security', 'social_security']
+    metrics: ['social_support']
   }
 ];
 
 interface MetricSelectorProps {
   selectedMetrics: string[];
   onMetricSelect: (metric: string) => void;
+  selectedCountries: string[];
 }
 
-export default function MetricSelector({ selectedMetrics, onMetricSelect }: MetricSelectorProps) {
+export default function MetricSelector({ selectedMetrics, onMetricSelect, selectedCountries }: MetricSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['personal', 'health', 'education', 'work']));
+
+  const { data: availabilityData } = useQuery(GET_AVAILABLE_METRICS, {
+    variables: { countries: selectedCountries },
+    skip: !selectedCountries.length
+  });
+
+  const metricAvailability = new Map<string, MetricAvailability>();
+  availabilityData?.availableMetrics.forEach((metric: MetricAvailability) => {
+    metricAvailability.set(metric.metric, metric);
+  });
+
+  const getMetricStatus = (metric: string) => {
+    const availability = metricAvailability.get(metric);
+    if (!availability) return { color: 'text-gray-500', text: 'Unknown' };
+    
+    switch (availability.source) {
+      case 'real':
+        return { color: 'text-green-500', text: 'Available (Real)' };
+      case 'mock':
+        return { color: 'text-yellow-500', text: 'Available (Mock)' };
+      default:
+        return { color: 'text-red-500', text: 'Unavailable' };
+    }
+  };
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -140,19 +148,35 @@ export default function MetricSelector({ selectedMetrics, onMetricSelect }: Metr
             
             {expandedCategories.has(category.id) && (
               <div className="px-4 py-2 space-y-2">
-                {category.metrics.map((metric) => (
-                  <label key={metric} className="flex items-center space-x-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedMetrics.includes(metric)}
-                      onChange={() => onMetricSelect(metric)}
-                      className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-700"
-                    />
-                    <span className="text-sm">
-                      {metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>
-                  </label>
-                ))}
+                {category.metrics.map((metric) => {
+                  const status = getMetricStatus(metric);
+                  const isDisabled = status.text === 'Unavailable';
+                  
+                  return (
+                    <label
+                      key={metric}
+                      className={`flex items-center justify-between py-1 ${
+                        isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedMetrics.includes(metric)}
+                          onChange={() => !isDisabled && onMetricSelect(metric)}
+                          disabled={isDisabled}
+                          className="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-600 bg-gray-700 disabled:opacity-50"
+                        />
+                        <span className="text-sm">
+                          {metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </span>
+                      </div>
+                      <span className={`text-xs ${status.color}`}>
+                        {status.text}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             )}
           </div>
