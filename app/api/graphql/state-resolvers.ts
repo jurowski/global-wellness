@@ -70,26 +70,17 @@ export const stateResolvers = {
     
     compareStates: async (_: any, { stateCodes }: { stateCodes: string[] }): Promise<StateData[]> => {
       try {
-        const states = await stateResolvers.Query.states();
-        const selectedStates = states.filter(state => stateCodes.includes(state.stateCode));
+        const baseUrl = process.env.NODE_ENV === 'production'
+          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
+          : 'http://localhost:3000';
         
-        const mockMetric: WellnessMetric = {
-          value: 75.0,
-          year: 2023,
-          source: "Mock Data",
-          confidenceInterval: "±2.5",
-          isRealData: false,
-          category: "State Wellness"
-        };
-        
-        return selectedStates.map(state => ({
-          ...state,
-          happiness: mockMetric,
-          healthcare: mockMetric,
-          education: mockMetric,
-          work_life: mockMetric,
-          social_support: mockMetric
-        }));
+        const url = new URL('/api/state-wellness-data', baseUrl).toString();
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const allStates = await response.json();
+        return allStates.filter((state: StateData) => stateCodes.includes(state.stateCode));
       } catch (error) {
         console.error('Error comparing states:', error);
         throw new Error('Failed to compare states');
