@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  StateWellnessFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dist/index.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          STATES_TABLE_NAME: !Ref StatesTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref StatesTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /state-wellness-data
+            Method: get
+
+  StatesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: states-wellness-data
+      AttributeDefinitions:
+        - AttributeName: stateCode
+          AttributeType: S
+      KeySchema:
+        - AttributeName: stateCode
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  StateWellnessApi:
+    Description: "API Gateway endpoint URL for State Wellness function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/state-wellness-data/"
+  StateWellnessFunction:
+    Description: "State Wellness Lambda Function ARN"
+    Value: !GetAtt StateWellnessFunction.Arn
+  StateWellnessFunctionIamRole:
+    Description: "Implicit IAM Role created for State Wellness function"
+    Value: !GetAtt StateWellnessFunctionRole.Arn 

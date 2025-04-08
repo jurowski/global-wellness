@@ -29,8 +29,30 @@ export const typeDefs = gql`
     lastUpdated: String
   }
 
+  type StateMetric {
+    value: Float!
+    year: Int!
+    source: String!
+    confidenceInterval: String
+    isRealData: Boolean!
+    category: String!
+  }
+
+  type State {
+    name: String!
+    stateCode: String!
+    region: String!
+    population: Int!
+    happiness: StateMetric
+    healthcare: StateMetric
+    education: StateMetric
+    work_life: StateMetric
+    social_support: StateMetric
+  }
+
   type Query {
     countries: [Country!]!
+    country(countryCode: String!): Country
     metrics: [String!]!
     wellnessData(countries: [String!], metrics: [String!]): [Country!]!
     compareCountries(countryCodes: [String!]!): [Country!]!
@@ -38,6 +60,10 @@ export const typeDefs = gql`
     getRegionalAverages(metric: String!): [RegionalAverage!]!
     searchCountries(query: String!): [Country!]!
     availableMetrics(countries: [String!]!): [MetricAvailability!]!
+    states: [State!]!
+    state(stateCode: String!): State
+    compareStates(stateCodes: [String!]!): [State!]!
+    availableStateMetrics(states: [String!]!): [MetricAvailability!]!
   }
 
   type RegionalAverage {

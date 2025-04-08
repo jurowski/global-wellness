@@ -17,10 +17,13 @@
     "generate-icons": "node scripts/generate-icons.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:debug": "jest --runInBand --detectOpenHandles"
+    "test:debug": "jest --runInBand --detectOpenHandles",
+    "clean:test": "rm -rf tests/e2e/test-results/ playwright-report/ error-state-*.png graphql-error-*.png test-failure-*.png test.log",
+    "clean:all": "rm -rf .next node_modules coverage .nyc_output && npm run clean:test",
+    "test:ci": "npm run clean:test && NODE_ENV=test npx playwright test tests/e2e/graphql.test.ts",
+    "monitor:state": "node scripts/monitor-state-comparison.js"
   },
   "dependencies": {
-    "@apollo/client": "^3.13.6",
     "@heroicons/react": "^2.2.0",
     "@next/env": "^15.2.4",
     "@sentry/nextjs": "^9.11.0",
@@ -30,6 +33,7 @@
     "@swc/helpers": "^0.5.15",
     "@tailwindcss/typography": "^0.5.10",
     "@vercel/analytics": "^1.5.0",
+    "@vercel/blob": "^0.27.3",
     "@vercel/speed-insights": "^1.2.0",
     "aws-cdk-lib": "^2.188.0",
     "axios": "^1.6.7",
@@ -49,6 +53,7 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@apollo/client": "^3.13.6",
     "@apollo/server": "^4.11.3",
     "@as-integrations/next": "^3.2.0",
     "@babel/core": "^7.26.10",
@@ -78,6 +83,9 @@
     "jest-environment-jsdom": "^29.7.0",
     "next": "^15.2.4",
     "postcss": "^8.5.3",
+    "serverless": "^4.12.0",
+    "serverless-nextjs-plugin": "^2.5.2-alpha.0",
+    "serverless-offline": "^14.4.0",
     "sharp": "^0.34.0",
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.3.1",

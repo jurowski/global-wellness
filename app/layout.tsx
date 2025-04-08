@@ -31,6 +31,9 @@ export default function RootLayout({
   
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body suppressHydrationWarning className={`${inter.className} bg-gray-900 text-white min-h-screen`}>
         <Header />
         <main className="container mx-auto px-4 py-8">

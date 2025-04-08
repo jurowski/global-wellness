@@ -1,6 +1,5 @@
 'use client';
 
-import { useQuery, gql } from '@apollo/client';
 import {
   Radar,
   RadarChart,
@@ -10,35 +9,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-
-const GET_WELLNESS_DATA = gql`
-  query GetWellnessData($countries: [String!], $metrics: [String!]) {
-    wellnessData(countries: $countries, metrics: $metrics) {
-      name
-      countryCode
-      happiness {
-        value
-        year
-      }
-      healthcare {
-        value
-        year
-      }
-      education {
-        value
-        year
-      }
-      work_life {
-        value
-        year
-      }
-      social_support {
-        value
-        year
-      }
-    }
-  }
-`;
+import { StateData } from '../types/state';
 
 const METRICS = [
   { id: 'happiness', label: 'Happiness' },
@@ -50,33 +21,37 @@ const METRICS = [
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#ff8042'];
 
-export default function MetricRadarChart() {
-  const { data } = useQuery(GET_WELLNESS_DATA, {
-    variables: {
-      countries: ['United States', 'Finland', 'Japan'],
-      metrics: METRICS.map(m => m.id)
-    }
-  });
+interface MetricRadarChartProps {
+  data: StateData[];
+}
 
+export default function MetricRadarChart({ data }: MetricRadarChartProps) {
   const chartData = METRICS.map(metric => {
     const entry: any = {
       metric: metric.label
     };
     
-    if (data?.wellnessData) {
-      data.wellnessData.forEach((country: any) => {
-        entry[country.name] = country[metric.id]?.value || 0;
+    if (data) {
+      data.forEach((state) => {
+        const metricData = state[metric.id as keyof StateData];
+        if (metricData && typeof metricData === 'object' && 'value' in metricData) {
+          entry[state.name] = metricData.value;
+        } else {
+          entry[state.name] = 0;
+        }
       });
     }
     
     return entry;
   });
 
+  const year = data?.[0]?.happiness?.year || new Date().getFullYear();
+
   return (
     <div className="bg-gray-800 rounded-lg p-6">
       <h3 className="text-xl font-semibold mb-4">Metric Comparison Radar</h3>
       <div className="text-sm text-gray-400 mb-4">
-        Data from {data?.wellnessData?.[0]?.happiness?.year || 2023}
+        Data from {year}
       </div>
       <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
@@ -84,11 +59,11 @@ export default function MetricRadarChart() {
             <PolarGrid />
             <PolarAngleAxis dataKey="metric" />
             <PolarRadiusAxis angle={30} domain={[0, 100]} />
-            {data?.wellnessData?.map((country: any, index: number) => (
+            {data?.map((state, index) => (
               <Radar
-                key={country.countryCode}
-                name={country.name}
-                dataKey={country.name}
+                key={state.stateCode}
+                name={state.name}
+                dataKey={state.name}
                 stroke={COLORS[index % COLORS.length]}
                 fill={COLORS[index % COLORS.length]}
                 fillOpacity={0.6}

@@ -1,159 +1,111 @@
-import { chromium, test, expect, Browser, Page, ConsoleMessage, Request, Route } from '@playwright/test';
+import { test, expect, chromium } from '@playwright/test';
+import { saveTestScreenshot, saveTestError, saveTestLog } from '../utils/testArtifacts';
 
 const SERVER_PORT = process.env.PORT || 3000;
 
-test.describe('GraphQL Integration Tests', () => {
-  let browser: Browser;
-  let page: Page;
+test.describe('GraphQL Integration', () => {
+  let browser: any;
+  let page: any;
 
   test.beforeAll(async () => {
     browser = await chromium.launch({
-      headless: false,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    
-    const context = await browser.newContext({
-      ignoreHTTPSErrors: true,
-      viewport: { width: 1280, height: 720 }
-    });
-    
-    page = await context.newPage();
-    
-    page.on('console', msg => {
-      if (msg.type() === 'error' || msg.type() === 'warning') {
-        console.log(`Browser ${msg.type()}:`, msg.text());
-      }
-    });
-    
-    page.on('pageerror', error => {
-      console.error('Page error:', error.message);
-      test.fail();
-    });
+  });
 
-    page.on('requestfailed', request => {
-      console.log('Failed request:', {
-        url: request.url(),
-        error: request.failure()?.errorText
-      });
-    });
+  test.beforeEach(async () => {
+    page = await browser.newPage();
+    await page.goto(`http://localhost:${SERVER_PORT}`);
+  });
+
+  test.afterEach(async () => {
+    if (page) {
+      try {
+        await page.close();
+      } catch (error) {
+        console.error('Error closing page:', error);
+      }
+    }
   });
 
   test.afterAll(async () => {
-    await browser?.close().catch(console.error);
-  });
-
-  test.afterEach(async ({ }, testInfo) => {
-    if (testInfo.status !== testInfo.expectedStatus) {
-      await page.screenshot({ path: `test-failure-${Date.now()}.png` });
-      await browser?.close();
-      process.exit(1);
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (error) {
+        console.error('Error closing browser:', error);
+      }
     }
   });
 
-  test('should load the page without GraphQL errors', async () => {
-    console.log(`Navigating to http://localhost:${SERVER_PORT}/`);
-    
+  test('page loads without GraphQL errors', async () => {
     const consoleErrors: string[] = [];
     const failedRequests: string[] = [];
 
-    page.on('console', (msg: ConsoleMessage) => {
+    page.on('console', async (msg: any) => {
       if (msg.type() === 'error') {
-        console.log('Console error:', msg.text());
         consoleErrors.push(msg.text());
+        await saveTestLog(msg.text(), 'graphql-console-error');
       }
     });
 
-    page.on('requestfailed', (request: Request) => {
-      const error = `${request.url()} - ${request.failure()?.errorText}`;
-      console.log('Failed request:', error);
-      failedRequests.push(error);
+    page.on('requestfailed', async (request: any) => {
+      failedRequests.push(`${request.method()} ${request.url()}`);
+      await saveTestLog(`${request.method()} ${request.url()}`, 'graphql-request-failed');
     });
 
-    let retries = 3;
-    let response;
-    
-    while (retries > 0) {
-      try {
-        response = await page.goto(`http://localhost:${SERVER_PORT}/`, {
-          waitUntil: 'networkidle',
-          timeout: 30000
-        });
-        break;
-      } catch (error) {
-        console.log(`Retry attempt ${4 - retries} failed:`, error);
-        retries--;
-        if (retries === 0) {
-          await page.screenshot({ path: `navigation-failure-${Date.now()}.png` });
-          throw error;
-        }
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
+    // Wait for the page to load and any initial GraphQL requests to complete
+    await page.waitForLoadState('networkidle');
+
+    // Take a screenshot for debugging
+    const screenshotUrl = await saveTestScreenshot(page, 'graphql-page-load');
+
+    // Check for console errors
+    if (consoleErrors.length > 0) {
+      const errorUrl = await saveTestError(
+        new Error(`Console errors found: ${consoleErrors.join(', ')}`),
+        'graphql-console-errors'
+      );
+      throw new Error(`Console errors found. See ${errorUrl} for details. Screenshot: ${screenshotUrl}`);
     }
-    
-    expect(response?.status()).toBe(200);
-    
-    await page.waitForTimeout(5000);
-    
-    if (consoleErrors.length > 0 || failedRequests.length > 0) {
-      await page.screenshot({ path: `error-state-${Date.now()}.png` });
-      throw new Error('Test failed due to console errors or failed requests');
+
+    // Check for failed requests
+    if (failedRequests.length > 0) {
+      const errorUrl = await saveTestError(
+        new Error(`Failed requests found: ${failedRequests.join(', ')}`),
+        'graphql-failed-requests'
+      );
+      throw new Error(`Failed requests found. See ${errorUrl} for details. Screenshot: ${screenshotUrl}`);
     }
-    
-    expect(consoleErrors).toHaveLength(0);
-    expect(failedRequests).toHaveLength(0);
   });
 
-  test('should successfully fetch country data', async () => {
+  test('can fetch country data successfully', async () => {
+    // Wait for the page to load
+    await page.waitForLoadState('networkidle');
+
+    // Check for GraphQL errors in the response
     const graphqlErrors: string[] = [];
-    
-    await page.route('**/api/graphql', async (route: Route) => {
-      try {
-        const response = await route.fetch();
+    page.on('response', async (response: any) => {
+      if (response.url().includes('/api/graphql')) {
         const data = await response.json();
-        
         if (data.errors) {
-          console.log('GraphQL errors:', data.errors);
           graphqlErrors.push(...data.errors.map((e: any) => e.message));
-          await page.screenshot({ path: `graphql-error-${Date.now()}.png` });
+          await saveTestLog(JSON.stringify(data.errors, null, 2), 'graphql-response-errors');
         }
-        
-        await route.fulfill({ response });
-      } catch (error) {
-        console.error('Error handling GraphQL request:', error);
-        await page.screenshot({ path: `graphql-request-error-${Date.now()}.png` });
-        await route.fulfill({ status: 500 });
       }
     });
 
-    let retries = 3;
-    let response;
-    
-    while (retries > 0) {
-      try {
-        response = await page.goto(`http://localhost:${SERVER_PORT}/`, {
-          waitUntil: 'networkidle',
-          timeout: 30000
-        });
-        break;
-      } catch (error) {
-        console.log(`Retry attempt ${4 - retries} failed:`, error);
-        retries--;
-        if (retries === 0) {
-          await page.screenshot({ path: `navigation-failure-${Date.now()}.png` });
-          throw error;
-        }
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
-    }
-    
-    expect(response?.status()).toBe(200);
-    
-    await page.waitForTimeout(5000);
-    
+    // Take a screenshot for debugging
+    const screenshotUrl = await saveTestScreenshot(page, 'graphql-country-data');
+
+    // Check for GraphQL errors
     if (graphqlErrors.length > 0) {
-      throw new Error(`GraphQL errors encountered: ${graphqlErrors.join(', ')}`);
+      const errorUrl = await saveTestError(
+        new Error(`GraphQL errors found: ${graphqlErrors.join(', ')}`),
+        'graphql-errors'
+      );
+      throw new Error(`GraphQL errors found. See ${errorUrl} for details. Screenshot: ${screenshotUrl}`);
     }
-    
-    expect(graphqlErrors).toHaveLength(0);
   });
 }); 

@@ -29,6 +29,12 @@ export default function Header() {
                 Dashboard
               </a>
               <a
+                href="/state-comparison"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/state-comparison')}`}
+              >
+                US States
+              </a>
+              <a
                 href="/admin/fetchers"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/admin/fetchers')}`}
               >

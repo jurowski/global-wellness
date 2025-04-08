@@ -1,36 +1,7 @@
 'use client';
 
-import { useQuery, gql } from '@apollo/client';
 import { ResponsiveContainer } from 'recharts';
-
-const GET_WELLNESS_DATA = gql`
-  query GetWellnessData($countries: [String!], $metrics: [String!]) {
-    wellnessData(countries: $countries, metrics: $metrics) {
-      name
-      countryCode
-      happiness {
-        value
-        year
-      }
-      healthcare {
-        value
-        year
-      }
-      education {
-        value
-        year
-      }
-      work_life {
-        value
-        year
-      }
-      social_support {
-        value
-        year
-      }
-    }
-  }
-`;
+import { StateData } from '../types/state';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#ff8042'];
 
@@ -56,16 +27,20 @@ function calculateCorrelation(x: number[], y: number[]): number {
   return isNaN(correlation) ? 0 : correlation;
 }
 
-export default function MetricHeatmap() {
-  const { data } = useQuery(GET_WELLNESS_DATA, {
-    variables: {
-      metrics: METRICS.map(m => m.id)
-    }
-  });
+interface MetricHeatmapProps {
+  data: StateData[];
+}
 
+export default function MetricHeatmap({ data }: MetricHeatmapProps) {
   const getMetricValues = (metricId: string) => {
-    if (!data?.wellnessData) return [];
-    return data.wellnessData.map((country: any) => country[metricId]?.value || 0);
+    if (!data) return [];
+    return data.map(state => {
+      const metricData = state[metricId as keyof StateData];
+      if (metricData && typeof metricData === 'object' && 'value' in metricData) {
+        return metricData.value;
+      }
+      return 0;
+    });
   };
 
   const correlations = METRICS.map(metric1 => {
@@ -81,11 +56,13 @@ export default function MetricHeatmap() {
     return `hsl(${hue}, 70%, 50%)`;
   };
 
+  const year = data?.[0]?.happiness?.year || new Date().getFullYear();
+
   return (
     <div className="bg-gray-800 rounded-lg p-6">
       <h3 className="text-xl font-semibold mb-4">Metric Correlations</h3>
       <div className="text-sm text-gray-400 mb-4">
-        Data from {data?.wellnessData?.[0]?.happiness?.year || 2023}
+        Data from {year}
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full">

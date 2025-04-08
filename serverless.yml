@@ -1,0 +1,25 @@
+service: global-wellness
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    NODE_ENV: ${opt:stage, 'dev'}
+
+functions:
+  stateWellnessData:
+    handler: app/api/state-wellness-data/route.handler
+    events:
+      - http:
+          path: state-wellness-data
+          method: get
+          cors: true
+
+plugins:
+  - serverless-nextjs-plugin
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000 

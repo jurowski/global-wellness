@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+*.zip
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# AWS SAM
+.aws-sam/
+samconfig.toml
+
+# Test artifacts
+coverage/
+test-artifacts/ 

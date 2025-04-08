@@ -1,4 +1,5 @@
 import { wellnessData, CountryData as ImportedCountryData, countryProfiles } from '../wellness-data/route';
+import { stateResolvers } from './state-resolvers';
 
 const calculateTrend = (values: number[], years: number = 5): number[] => {
   if (values.length < years) return values;
@@ -127,59 +128,100 @@ const normalizeMetricValue = (metric: WellnessMetric | null, metricName: string)
   return normalizedMetric;
 };
 
-export const resolvers = {
+const resolvers = {
   Query: {
+    ...stateResolvers.Query,
     countries: async () => {
-      console.log('[countries resolver] Entering...');
       try {
-        console.log('[countries resolver] Calling wellnessData()...');
-        const data = await wellnessData();
-        console.log(`[countries resolver] Received ${data?.length || 0} countries from wellnessData.`);
+        const baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
+          : 'http://localhost:3000';
         
-        if (!data || data.length === 0) {
-          console.warn('[countries resolver] wellnessData returned empty or null data.');
-          throw new Error('No country data available');
-        }
-        
-        // Validate the data structure
-        const validData = data.filter(country => {
-          if (!country.countryCode) {
-            console.warn(`[countries resolver] Invalid country data: missing countryCode`, country);
-            return false;
-          }
-          return true;
-        });
-        
-        if (validData.length === 0) {
-          throw new Error('No valid country data available');
-        }
-        
-        console.log('[countries resolver] Returning data.');
-        return validData;
+        const response = await fetch(`${baseUrl}/wellness-data`);
+        const data = await response.json();
+        return data;
       } catch (error) {
-        console.error('[countries resolver] Error:', error);
-        throw new Error('Failed to fetch countries data');
+        console.error('Error fetching countries:', error);
+        throw new Error('Failed to fetch countries');
       }
     },
 
-    metrics: async () => {
-      return ALL_METRICS;
+    country: async (_: any, { countryCode }: { countryCode: string }) => {
+      try {
+        const baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
+          : 'http://localhost:3000';
+        
+        const response = await fetch(
+          `${baseUrl}/wellness-data?countries=${countryCode}`
+        );
+        const data = await response.json();
+        return data[0] || null;
+      } catch (error) {
+        console.error('Error fetching country:', error);
+        throw new Error('Failed to fetch country');
+      }
     },
 
-    wellnessData: async (_: any, { countries, metrics }: { countries?: string[]; metrics?: string[] }) => {
+    compareCountries: async (_: any, { countryCodes }: { countryCodes: string[] }) => {
+      try {
+        const baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
+          : 'http://localhost:3000';
+        
+        const response = await fetch(
+          `${baseUrl}/wellness-data?countries=${countryCodes.join(',')}`
+        );
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error comparing countries:', error);
+        throw new Error('Failed to compare countries');
+      }
+    },
+
+    availableMetrics: async (_: any, { countries }: { countries: string[] }) => {
+      try {
+        const baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
+          : 'http://localhost:3000';
+        
+        const response = await fetch(
+          `${baseUrl}/wellness-data?countries=${countries.join(',')}`
+        );
+        const data = await response.json();
+        
+        // Extract available metrics from the first country's data
+        const metrics = Object.keys(data[0] || {})
+          .filter(key => !['name', 'countryCode', 'region', 'population'].includes(key))
+          .map(metric => ({
+            metric,
+            isAvailable: true,
+            source: data[0][metric]?.source || 'Unknown',
+            lastUpdated: new Date().toISOString()
+          }));
+        
+        return metrics;
+      } catch (error) {
+        console.error('Error fetching available metrics:', error);
+        throw new Error('Failed to fetch available metrics');
+      }
+    },
+
+    wellnessData: async (_: any, { countries, metrics }: { countries?: string[], metrics?: string[] }) => {
       try {
         const data = await wellnessData();
         let filteredData = data;
 
         if (countries && countries.length > 0) {
-          filteredData = filteredData.filter(c => countries.includes(c.countryCode));
+          filteredData = filteredData.filter(country => countries.includes(country.name || ''));
         }
 
         if (metrics && metrics.length > 0) {
           filteredData = filteredData.map(country => {
             const filteredCountry = { ...country };
             Object.keys(filteredCountry).forEach(key => {
-              if (!metrics.includes(key) && key !== 'name' && key !== 'countryCode' && key !== 'region' && key !== 'population') {
+              if (key !== 'name' && key !== 'countryCode' && key !== 'region' && key !== 'population' && !metrics.includes(key)) {
                 delete (filteredCountry as any)[key];
               }
             });
@@ -189,49 +231,27 @@ export const resolvers = {
 
         return filteredData;
       } catch (error) {
-        console.error('Error in wellnessData resolver:', error);
+        console.error('Error fetching wellness data:', error);
         throw error;
       }
     },
 
-    compareCountries: async (_: any, { countryCodes }: { countryCodes: string[] }) => {
+    searchCountries: async (_: any, { query }: { query: string }) => {
       try {
-        console.log('[compareCountries] Fetching data for countries:', countryCodes);
-        
-        if (!countryCodes || countryCodes.length === 0) {
-          throw new Error('No country codes provided');
-        }
-        
-        // Get all countries from wellnessData
-        const allCountries = await wellnessData();
-        
-        // Find countries by their country code or name (case-insensitive)
-        const selectedCountries = countryCodes
-          .map(code => {
-            const normalizedCode = code.toLowerCase();
-            const country = allCountries.find(c => 
-              c.countryCode.toLowerCase() === normalizedCode || 
-              c.name?.toLowerCase() === normalizedCode
-            );
-            
-            if (!country) {
-              console.error(`[compareCountries] Country not found for code: ${code}`);
-              throw new Error(`Country not found: ${code}`);
-            }
-            
-            return country;
-          });
-        
-        if (selectedCountries.length === 0) {
-          throw new Error('No matching countries found');
-        }
-        
-        console.log('[compareCountries] Found countries:', selectedCountries.map(c => c.name));
-        return selectedCountries;
+        const data = await wellnessData();
+        const normalizedQuery = query.toLowerCase();
+        return data.filter(country => 
+          (country.name || '').toLowerCase().includes(normalizedQuery) ||
+          country.countryCode.toLowerCase().includes(normalizedQuery)
+        );
       } catch (error) {
-        console.error('[compareCountries] Error:', error);
+        console.error('Error searching countries:', error);
         throw error;
       }
+    },
+
+    metrics: async () => {
+      return ALL_METRICS;
     },
 
     getTrends: async (_: any, { country, metric, years }: { country: string; metric: string; years: number }): Promise<WellnessMetric[]> => {
@@ -292,25 +312,6 @@ export const resolvers = {
         console.error('Error in getRegionalAverages resolver:', error);
         throw error;
       }
-    },
-
-    searchCountries: async (_: any, { query }: { query: string }) => {
-      try {
-        const data = await wellnessData();
-        const searchTerm = query.toLowerCase();
-        return data.filter(country => 
-          (country.name?.toLowerCase().includes(searchTerm) || false) ||
-          country.countryCode.toLowerCase().includes(searchTerm) ||
-          country.region.toLowerCase().includes(searchTerm)
-        );
-      } catch (error) {
-        console.error('Error in searchCountries resolver:', error);
-        throw error;
-      }
-    },
-
-    availableMetrics: (_: any, { countries }: { countries: string[] }) => {
-      return checkMetricAvailability(countries);
     }
   },
 
@@ -374,4 +375,6 @@ export const resolvers = {
       }
     }
   }
-}; 
+};
+
+export default resolvers; 

@@ -38,3 +38,24 @@ next-env.d.ts
 .vscode/
 *.swp
 *.swo
+
+# Test artifacts
+/tests/e2e/test-results/
+/playwright-report/
+*.test.ts
+*.test.tsx
+jest.config.js
+jest.setup.js
+tsconfig.test.json
+/test-artifacts/
+
+# Error screenshots and logs
+error-state-*.png
+graphql-error-*.png
+test-failure-*.png
+test.log
+
+# Development files
+.env.local
+.env.development
+.env.test
