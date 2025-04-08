@@ -7,7 +7,7 @@ const GET_WELLNESS_DATA = gql`
   query GetWellnessData($countries: [String!], $metrics: [String!]) {
     wellnessData(countries: $countries, metrics: $metrics) {
       name
-      code
+      countryCode
       happiness {
         value
         year

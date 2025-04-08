@@ -22,15 +22,22 @@ export const typeDefs = gql`
     social_support: WellnessMetric
   }
 
+  type MetricAvailability {
+    metric: String!
+    isAvailable: Boolean!
+    source: String!
+    lastUpdated: String
+  }
+
   type Query {
     countries: [Country!]!
     metrics: [String!]!
-    wellnessData(countryCode: String!): Country!
+    wellnessData(countries: [String!], metrics: [String!]): [Country!]!
     compareCountries(countryCodes: [String!]!): [Country!]!
     getTrends(country: String!, metric: String!, years: Int!): [WellnessMetric!]!
     getRegionalAverages(metric: String!): [RegionalAverage!]!
     searchCountries(query: String!): [Country!]!
-    availableMetrics(countries: [String!]!): [String!]!
+    availableMetrics(countries: [String!]!): [MetricAvailability!]!
   }
 
   type RegionalAverage {

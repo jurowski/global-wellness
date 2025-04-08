@@ -111,14 +111,53 @@ const isWellnessMetric = (value: any): value is WellnessMetric => {
   return value && typeof value === 'object' && 'value' in value;
 };
 
+const normalizeMetricValue = (metric: WellnessMetric | null, metricName: string): WellnessMetric | null => {
+  if (!metric) return null;
+
+  const normalizedMetric = { ...metric };
+  
+  // Check if the value is already in 0-10 scale (approximately)
+  const isSmallScale = metric.value <= 10;
+  
+  // Convert to 0-10 scale if necessary
+  if (!isSmallScale) {
+    normalizedMetric.value = metric.value / 10;
+  }
+  
+  return normalizedMetric;
+};
+
 export const resolvers = {
   Query: {
     countries: async () => {
+      console.log('[countries resolver] Entering...');
       try {
+        console.log('[countries resolver] Calling wellnessData()...');
         const data = await wellnessData();
-        return data;
+        console.log(`[countries resolver] Received ${data?.length || 0} countries from wellnessData.`);
+        
+        if (!data || data.length === 0) {
+          console.warn('[countries resolver] wellnessData returned empty or null data.');
+          throw new Error('No country data available');
+        }
+        
+        // Validate the data structure
+        const validData = data.filter(country => {
+          if (!country.countryCode) {
+            console.warn(`[countries resolver] Invalid country data: missing countryCode`, country);
+            return false;
+          }
+          return true;
+        });
+        
+        if (validData.length === 0) {
+          throw new Error('No valid country data available');
+        }
+        
+        console.log('[countries resolver] Returning data.');
+        return validData;
       } catch (error) {
-        console.error('Error in countries resolver:', error);
+        console.error('[countries resolver] Error:', error);
         throw new Error('Failed to fetch countries data');
       }
     },
@@ -127,16 +166,28 @@ export const resolvers = {
       return ALL_METRICS;
     },
 
-    wellnessData: async (_: any, { countryCode }: { countryCode: string }) => {
+    wellnessData: async (_: any, { countries, metrics }: { countries?: string[]; metrics?: string[] }) => {
       try {
         const data = await wellnessData();
-        const country = data.find(c => c.countryCode === countryCode);
-        
-        if (!country) {
-          throw new Error(`Country with code ${countryCode} not found`);
+        let filteredData = data;
+
+        if (countries && countries.length > 0) {
+          filteredData = filteredData.filter(c => countries.includes(c.countryCode));
         }
 
-        return country;
+        if (metrics && metrics.length > 0) {
+          filteredData = filteredData.map(country => {
+            const filteredCountry = { ...country };
+            Object.keys(filteredCountry).forEach(key => {
+              if (!metrics.includes(key) && key !== 'name' && key !== 'countryCode' && key !== 'region' && key !== 'population') {
+                delete (filteredCountry as any)[key];
+              }
+            });
+            return filteredCountry;
+          });
+        }
+
+        return filteredData;
       } catch (error) {
         console.error('Error in wellnessData resolver:', error);
         throw error;
@@ -145,23 +196,45 @@ export const resolvers = {
 
     compareCountries: async (_: any, { countryCodes }: { countryCodes: string[] }) => {
       try {
-        const data = await wellnessData();
-        const countries = data.filter(c => countryCodes.includes(c.countryCode));
+        console.log('[compareCountries] Fetching data for countries:', countryCodes);
         
-        if (countries.length !== countryCodes.length) {
-          const foundCodes = countries.map(c => c.countryCode);
-          const missingCodes = countryCodes.filter(code => !foundCodes.includes(code));
-          throw new Error(`Countries not found: ${missingCodes.join(', ')}`);
+        if (!countryCodes || countryCodes.length === 0) {
+          throw new Error('No country codes provided');
         }
-
-        return countries;
+        
+        // Get all countries from wellnessData
+        const allCountries = await wellnessData();
+        
+        // Find countries by their country code or name (case-insensitive)
+        const selectedCountries = countryCodes
+          .map(code => {
+            const normalizedCode = code.toLowerCase();
+            const country = allCountries.find(c => 
+              c.countryCode.toLowerCase() === normalizedCode || 
+              c.name?.toLowerCase() === normalizedCode
+            );
+            
+            if (!country) {
+              console.error(`[compareCountries] Country not found for code: ${code}`);
+              throw new Error(`Country not found: ${code}`);
+            }
+            
+            return country;
+          });
+        
+        if (selectedCountries.length === 0) {
+          throw new Error('No matching countries found');
+        }
+        
+        console.log('[compareCountries] Found countries:', selectedCountries.map(c => c.name));
+        return selectedCountries;
       } catch (error) {
-        console.error('Error in compareCountries resolver:', error);
+        console.error('[compareCountries] Error:', error);
         throw error;
       }
     },
 
-    getTrends: async (_: any, { country, metric, years }: { country: string; metric: string; years: number }) => {
+    getTrends: async (_: any, { country, metric, years }: { country: string; metric: string; years: number }): Promise<WellnessMetric[]> => {
       try {
         const data = await wellnessData();
         const countryData = data.find(d => d.countryCode === country);
@@ -176,7 +249,7 @@ export const resolvers = {
         }
 
         // Generate trend data based on the current value
-        return Array.from({ length: years }, (_, i) => ({
+        const trendData: WellnessMetric[] = Array.from({ length: years }, (_, i) => ({
           value: metricData.value * (1 - (i * 0.05)), // Simulated trend
           year: metricData.year - i,
           source: metricData.source,
@@ -184,6 +257,8 @@ export const resolvers = {
           isRealData: i === 0, // Only the current year is real data
           category: metric
         })).reverse();
+
+        return trendData;
       } catch (error) {
         console.error('Error in getTrends resolver:', error);
         throw error;
@@ -235,7 +310,7 @@ export const resolvers = {
     },
 
     availableMetrics: (_: any, { countries }: { countries: string[] }) => {
-      return ALL_METRICS;
+      return checkMetricAvailability(countries);
     }
   },
 

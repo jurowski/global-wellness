@@ -7,7 +7,7 @@ const SEARCH_COUNTRIES = gql`
   query SearchCountries($query: String!) {
     searchCountries(query: $query) {
       name
-      code
+      countryCode
       region
       population
       happiness {
@@ -25,6 +25,35 @@ const SEARCH_COUNTRIES = gql`
         confidenceInterval
         isRealData
         category
+      }
+    }
+  }
+`;
+
+const GET_WELLNESS_DATA = gql`
+  query GetWellnessData($countries: [String!], $metrics: [String!]) {
+    wellnessData(countries: $countries, metrics: $metrics) {
+      name
+      countryCode
+      happiness {
+        value
+        year
+      }
+      healthcare {
+        value
+        year
+      }
+      education {
+        value
+        year
+      }
+      work_life {
+        value
+        year
+      }
+      social_support {
+        value
+        year
       }
     }
   }
@@ -57,7 +86,7 @@ export default function WellnessData() {
           <h2 className="text-2xl font-bold mb-4">Wellness Data</h2>
           <div className="grid gap-6">
             {data.searchCountries.map((country: any) => (
-              <div key={country.code} className="bg-gray-800 p-6 rounded-lg">
+              <div key={country.countryCode} className="bg-gray-800 p-6 rounded-lg">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl font-semibold">{country.name}</h3>
                   <div className="text-sm text-gray-400">

@@ -15,7 +15,7 @@ const GET_WELLNESS_DATA = gql`
   query GetWellnessData($countries: [String!], $metrics: [String!]) {
     wellnessData(countries: $countries, metrics: $metrics) {
       name
-      code
+      countryCode
       happiness {
         value
         year
@@ -86,7 +86,7 @@ export default function MetricRadarChart() {
             <PolarRadiusAxis angle={30} domain={[0, 100]} />
             {data?.wellnessData?.map((country: any, index: number) => (
               <Radar
-                key={country.code}
+                key={country.countryCode}
                 name={country.name}
                 dataKey={country.name}
                 stroke={COLORS[index % COLORS.length]}

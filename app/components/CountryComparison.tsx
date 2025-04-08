@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import {
   BarChart,
@@ -99,19 +100,28 @@ const METRICS = [
   { id: 'social_support', label: 'Social Support' }
 ];
 
-// Country name standardization mapping
-const COUNTRY_NAME_MAPPING: { [key: string]: string } = {
-  'United States of America': 'United States',
-  'USA': 'United States',
-  'US': 'United States',
-  'UK': 'United Kingdom',
-  'Great Britain': 'United Kingdom',
-  'Republic of Korea': 'South Korea',
-  'Korea, Republic of': 'South Korea',
-  'Russian Federation': 'Russia',
-  'UAE': 'United Arab Emirates',
-  'Czechia': 'Czech Republic',
+// Update the country code mapping to include all necessary mappings
+const COUNTRY_CODE_MAPPING: { [key: string]: string } = {
+  'United States': 'US',
+  'Finland': 'FI',
+  'Japan': 'JP',
+  'Germany': 'DE',
+  'Costa Rica': 'CR',
+  'Canada': 'CA',
+  'Denmark': 'DK',
+  'Norway': 'NO',
+  'Sweden': 'SE',
+  'United Kingdom': 'GB',
+  'Netherlands': 'NL',
+  'Switzerland': 'CH',
+  'New Zealand': 'NZ'
 };
+
+// Add reverse mapping for country codes to names
+const COUNTRY_NAME_MAPPING: { [key: string]: string } = Object.entries(COUNTRY_CODE_MAPPING).reduce((acc, [name, code]) => {
+  acc[code] = name;
+  return acc;
+}, {} as { [key: string]: string });
 
 interface CountryComparisonProps {
   selectedMetrics?: string[];
@@ -155,40 +165,68 @@ const getMetricColor = (metric: string): string => {
 };
 
 export default function CountryComparison({ selectedMetrics = ['happiness', 'healthcare', 'education', 'work_life'], onCountryChange }: CountryComparisonProps) {
-  const [country1, setCountry1] = useState('US');
-  const [country2, setCountry2] = useState('FI');
+  const [country1, setCountry1] = useState<string>('');
+  const [country2, setCountry2] = useState<string>('');
   const [year, setYear] = useState(2023);
 
-  const { data: countriesData } = useQuery(GET_COUNTRIES);
-  const { data: comparisonData, error } = useQuery(COMPARE_COUNTRIES, {
+  const { data: countriesData, loading: countriesLoading, error: countriesError } = useQuery(GET_COUNTRIES);
+  
+  // Set initial countries once data is loaded
+  useEffect(() => {
+    if (!country1 && !country2 && countriesData?.countries?.length > 0) {
+      const usCountry = countriesData.countries.find((c: any) => c.countryCode === 'US');
+      const fiCountry = countriesData.countries.find((c: any) => c.countryCode === 'FI');
+      
+      if (usCountry && fiCountry) {
+        console.log('Setting initial countries:', usCountry.name, fiCountry.name);
+        setCountry1(usCountry.name);
+        setCountry2(fiCountry.name);
+      } else {
+        console.warn('Could not find US or FI in country data');
+      }
+    }
+  }, [countriesData, country1, country2]);
+
+  const { data: comparisonData, loading: comparisonLoading, error: comparisonError } = useQuery(COMPARE_COUNTRIES, {
     variables: {
-      countryCodes: [country1, country2]
+      countryCodes: [
+        COUNTRY_CODE_MAPPING[country1] || country1,
+        COUNTRY_CODE_MAPPING[country2] || country2
+      ].filter(Boolean)
     },
-    skip: !country1 || !country2,
+    skip: !country1 || !country2 || countriesLoading,
     onError: (error) => {
       console.error('GraphQL Error:', error);
-      console.error('Request Variables:', {
+      console.log('Request variables:', {
         country1,
-        country2
+        country2,
+        codes: [
+          COUNTRY_CODE_MAPPING[country1] || country1,
+          COUNTRY_CODE_MAPPING[country2] || country2
+        ]
       });
-    },
-    onCompleted: (data) => {
-      console.log('GraphQL Response:', data);
     }
   });
+
+  // Log available country options for debugging
+  useEffect(() => {
+    if (countriesData?.countries) {
+      console.log('Available country options:', countriesData.countries);
+    }
+  }, [countriesData]);
 
   const standardizeCountryName = (name: string) => {
     return COUNTRY_NAME_MAPPING[name] || name;
   };
 
   const handleCountry1Change = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCountry = (e.target as HTMLSelectElement).value;
+    const newCountry = e.target.value;
     setCountry1(newCountry);
     onCountryChange?.(newCountry, country2);
   };
 
   const handleCountry2Change = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCountry = (e.target as HTMLSelectElement).value;
+    const newCountry = e.target.value;
     setCountry2(newCountry);
     onCountryChange?.(country1, newCountry);
   };
@@ -198,7 +236,8 @@ export default function CountryComparison({ selectedMetrics = ['happiness', 'hea
     selectedMetrics.forEach(metric => {
       const metricData = country[metric];
       if (metricData) {
-        data[metric] = metricData.value;
+        // Values are now normalized to 0-10 scale, multiply by 10 for better visualization
+        data[metric] = metricData.value * 10;
         data[`${metric}Data`] = metricData;
       }
     });
@@ -213,49 +252,60 @@ export default function CountryComparison({ selectedMetrics = ['happiness', 'hea
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-2">First Country</label>
-          <select
-            value={country1}
-            onChange={handleCountry1Change}
-            className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-          >
-            {countriesData?.countries?.map((country: any) => (
-              <option key={country.countryCode} value={country.countryCode}>
-                {country.name}
-              </option>
-            ))}
-          </select>
+          {countriesLoading ? (
+            <div className="w-full p-2 rounded bg-gray-800 border border-gray-700">Loading countries...</div>
+          ) : (
+            <select
+              value={country1}
+              onChange={handleCountry1Change}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+            >
+              {countriesData?.countries?.map((country: any) => (
+                <option key={country.countryCode} value={country.name}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Second Country</label>
-          <select
-            value={country2}
-            onChange={handleCountry2Change}
-            className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-          >
-            {countriesData?.countries?.map((country: any) => (
-              <option key={country.countryCode} value={country.countryCode}>
-                {country.name}
-              </option>
-            ))}
-          </select>
+          {countriesLoading ? (
+            <div className="w-full p-2 rounded bg-gray-800 border border-gray-700">Loading countries...</div>
+          ) : (
+            <select
+              value={country2}
+              onChange={handleCountry2Change}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+            >
+              {countriesData?.countries?.map((country: any) => (
+                <option key={country.countryCode} value={country.name}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
-      {error && (
+      {comparisonError && (
         <div className="text-red-500">
-          Error: {error.message}
+          Error: {comparisonError.message}
         </div>
       )}
 
       {comparisonData && chartData.length > 0 && (
         <div className="space-y-4">
           <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" role="complementary" aria-label="Country comparison chart">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <YAxis domain={[0, 100]} />
+                <Tooltip 
+                  formatter={(value: number) => (value / 10).toFixed(1)} 
+                  labelFormatter={(label: string) => `Country: ${label}`}
+                />
                 <Legend />
                 {selectedMetrics.map(metric => (
                   <Bar
@@ -279,7 +329,9 @@ export default function CountryComparison({ selectedMetrics = ['happiness', 'hea
                       <span className="text-sm font-medium">
                         {METRICS.find(m => m.id === metric)?.label || metric}:
                       </span>
-                      <span className="text-sm">{item[metric]}</span>
+                      <span className="text-sm">
+                        {(item[metric] / 10).toFixed(1)}
+                      </span>
                     </div>
                     <DataSourceIndicator metricData={item[`${metric}Data`]} />
                   </div>
