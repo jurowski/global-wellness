@@ -133,13 +133,7 @@ const resolvers = {
     ...stateResolvers.Query,
     countries: async () => {
       try {
-        const baseUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
-          : 'http://localhost:3000';
-        
-        const response = await fetch(`${baseUrl}/wellness-data`);
-        const data = await response.json();
-        return data;
+        return await wellnessData();
       } catch (error) {
         console.error('Error fetching countries:', error);
         throw new Error('Failed to fetch countries');
@@ -148,15 +142,8 @@ const resolvers = {
 
     country: async (_: any, { countryCode }: { countryCode: string }) => {
       try {
-        const baseUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
-          : 'http://localhost:3000';
-        
-        const response = await fetch(
-          `${baseUrl}/wellness-data?countries=${countryCode}`
-        );
-        const data = await response.json();
-        return data[0] || null;
+        const data = await wellnessData();
+        return data.find(country => country.countryCode === countryCode) || null;
       } catch (error) {
         console.error('Error fetching country:', error);
         throw new Error('Failed to fetch country');
@@ -165,15 +152,8 @@ const resolvers = {
 
     compareCountries: async (_: any, { countryCodes }: { countryCodes: string[] }) => {
       try {
-        const baseUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
-          : 'http://localhost:3000';
-        
-        const response = await fetch(
-          `${baseUrl}/wellness-data?countries=${countryCodes.join(',')}`
-        );
-        const data = await response.json();
-        return data;
+        const data = await wellnessData();
+        return data.filter(country => countryCodes.includes(country.countryCode));
       } catch (error) {
         console.error('Error comparing countries:', error);
         throw new Error('Failed to compare countries');
@@ -182,22 +162,16 @@ const resolvers = {
 
     availableMetrics: async (_: any, { countries }: { countries: string[] }) => {
       try {
-        const baseUrl = process.env.NODE_ENV === 'production' 
-          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
-          : 'http://localhost:3000';
-        
-        const response = await fetch(
-          `${baseUrl}/wellness-data?countries=${countries.join(',')}`
-        );
-        const data = await response.json();
+        const data = await wellnessData();
+        const countryData = data.filter(country => countries.includes(country.countryCode));
         
         // Extract available metrics from the first country's data
-        const metrics = Object.keys(data[0] || {})
+        const metrics = Object.keys(countryData[0] || {})
           .filter(key => !['name', 'countryCode', 'region', 'population'].includes(key))
           .map(metric => ({
             metric,
             isAvailable: true,
-            source: data[0][metric]?.source || 'Unknown',
+            source: countryData[0][metric]?.source || 'Unknown',
             lastUpdated: new Date().toISOString()
           }));
         
