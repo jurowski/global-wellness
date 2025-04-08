@@ -59,4 +59,12 @@ next-env.d.ts
 
 # IDE
 .idea/
-.vscode/ 
+.vscode/
+
+# CDK
+/cdk/
+/temp-cdk/
+/cdk.out/
+*.zip
+/test-results/
+/playwright-report/ 
