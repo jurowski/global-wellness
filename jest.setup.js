@@ -31,4 +31,8 @@ window.IntersectionObserver = IntersectionObserver;
 
 // Set up environment variables for tests
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3000/api';
-process.env.NODE_ENV = process.env.NODE_ENV || 'test'; 
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+
+if (typeof TextDecoder === 'undefined') {
+  global.TextDecoder = require('util').TextDecoder;
+} 

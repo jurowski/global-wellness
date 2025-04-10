@@ -48,7 +48,7 @@ interface StateData {
 }
 
 // Mock data - in production, this would come from a database or external API
-const stateData: StateData[] = [
+export const stateData: StateData[] = [
   {
     name: 'California',
     stateCode: 'CA',

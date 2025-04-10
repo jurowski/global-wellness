@@ -51,7 +51,7 @@ export default function MetricHeatmap({ data }: MetricHeatmapProps) {
     });
   });
 
-  const getColor = (value: number) => {
+  const getColor = (value: number, isCountryCode: boolean = false) => {
     const hue = ((value + 1) / 2) * 240; // Maps -1 to 1 to 0 to 240 (blue to red)
     return `hsl(${hue}, 70%, 50%)`;
   };
@@ -85,7 +85,7 @@ export default function MetricHeatmap({ data }: MetricHeatmapProps) {
                     key={metric2.id}
                     className="p-2"
                     style={{
-                      backgroundColor: getColor(correlations[i]?.[j] || 0),
+                      backgroundColor: getColor(correlations[i]?.[j] || 0, true),
                       width: '80px',
                       height: '80px',
                       textAlign: 'center'

@@ -40,13 +40,17 @@ export const stateResolvers = {
           ];
         }
 
-        // Production environment
-        const baseUrl = process.env.NODE_ENV === 'production'
-          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
-          : 'http://localhost:3000';
+        // Use the internal API route
+        const url = new URL('/api/state-wellness-data', 'http://localhost:3000').toString();
         
-        const url = new URL('/api/state-wellness-data', baseUrl).toString();
-        const response = await fetch(url);
+        console.log(`Fetching all states from: ${url}`);
+        
+        // In production with Vercel, we can use a simpler relative URL
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/state-wellness-data' 
+          : url;
+        
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -70,12 +74,17 @@ export const stateResolvers = {
     
     compareStates: async (_: any, { stateCodes }: { stateCodes: string[] }): Promise<StateData[]> => {
       try {
-        const baseUrl = process.env.NODE_ENV === 'production'
-          ? 'https://rdh1rlf1u6.execute-api.us-east-1.amazonaws.com/prod'
-          : 'http://localhost:3000';
+        // Use the internal API route for all environments
+        const url = new URL('/api/state-wellness-data', 'http://localhost:3000').toString();
         
-        const url = new URL('/api/state-wellness-data', baseUrl).toString();
-        const response = await fetch(url);
+        console.log(`Fetching state data from: ${url}`);
+        
+        // In production with Vercel, we can use a simpler relative URL
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/state-wellness-data' 
+          : url;
+        
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

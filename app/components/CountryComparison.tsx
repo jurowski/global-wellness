@@ -11,7 +11,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  LabelList
 } from 'recharts';
 
 interface DataSourceStatus {
@@ -297,7 +298,7 @@ export default function CountryComparison({ selectedMetrics = ['happiness', 'hea
       {comparisonData && chartData.length > 0 && (
         <div className="space-y-4">
           <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%" role="complementary" aria-label="Country comparison chart">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -313,7 +314,80 @@ export default function CountryComparison({ selectedMetrics = ['happiness', 'hea
                     dataKey={metric}
                     fill={getMetricColor(metric)}
                     name={METRICS.find(m => m.id === metric)?.label || metric}
-                  />
+                    radius={[4, 4, 0, 0]}
+                    label={{
+                      position: 'top',
+                      content: (props: any) => {
+                        const { x, y, width, height, value } = props;
+                        const valueText = (value / 10).toFixed(1);
+                        const availableWidth = width - 4;
+                        const characterCount = valueText.length;
+                        const baseFontSize = 44;
+                        const calculatedFontSize = Math.min(
+                          baseFontSize,
+                          availableWidth / (characterCount * 0.6)
+                        );
+                        return (
+                          <text
+                            x={x + width / 2}
+                            y={y - 17}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="rgba(255, 255, 255, 0.5)"
+                            fontWeight="bold"
+                            fontSize={calculatedFontSize}
+                            stroke="rgba(0, 0, 0, 0.5)"
+                            strokeWidth="0.75"
+                          >
+                            {valueText}
+                          </text>
+                        );
+                      }
+                    }}
+                  >
+                    <LabelList
+                      dataKey={metric}
+                      position="center"
+                      content={(props: any) => {
+                        const { x, y, width, height, value } = props;
+                        if (height < 50) return null;
+                        const baseFontSize = 120;
+                        const metricsScaleFactor = Math.max(1.5, 3 - (selectedMetrics.length * 0.2));
+                        const stateCount = chartData.length; 
+                        const stateScaleFactor = stateCount <= 2 ? 1.0 : 
+                                                stateCount <= 4 ? 1.5 : 1.0;
+                        const multiMetricScaleFactor = (selectedMetrics.length >= 3 && selectedMetrics.length <= 5) ? 3.0 : 1.0;
+                        const scaledBaseFontSize = baseFontSize * metricsScaleFactor * stateScaleFactor * multiMetricScaleFactor;
+                        const availableWidth = width * 0.85;
+                        const labelLength = METRICS.find(m => m.id === metric)?.label.length || 0;
+                        const calculatedFontSize = Math.min(
+                          scaledBaseFontSize,
+                          availableWidth / (labelLength * 0.45),
+                          height / (labelLength * 0.6)
+                        );
+                        const padding = selectedMetrics.length === 1 ? 10 : 2;
+                        const adjustedWidth = width - (2 * padding);
+                        const adjustedFontSize = Math.min(
+                          calculatedFontSize,
+                          adjustedWidth / (labelLength * 0.45)
+                        );
+                        return (
+                          <text
+                            x={x + width / 2}
+                            y={y + height / 2}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="rgba(255, 255, 255, 0.9)"
+                            fontSize={adjustedFontSize}
+                            fontWeight="bold"
+                            transform={`rotate(-90, ${x + width / 2}, ${y + height / 2})`}
+                          >
+                            {METRICS.find(m => m.id === metric)?.label}
+                          </text>
+                        );
+                      }}
+                    />
+                  </Bar>
                 ))}
               </BarChart>
             </ResponsiveContainer>

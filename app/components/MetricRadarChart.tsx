@@ -47,6 +47,38 @@ export default function MetricRadarChart({ data }: MetricRadarChartProps) {
 
   const year = data?.[0]?.happiness?.year || new Date().getFullYear();
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 p-2 border border-gray-700 rounded">
+          <p className="font-bold">{label}</p>
+          {payload.map((entry: any, index: number) => {
+            const isReal = entry.payload[`${entry.name}_isReal`];
+            const state = data?.find(s => s.name === entry.name);
+            const metricKey = label.toLowerCase().replace(' ', '_') as keyof StateData;
+            const metricData = state?.[metricKey];
+            const source = typeof metricData === 'object' && 'source' in metricData ? metricData.source : 'Unknown';
+            const confidence = typeof metricData === 'object' && 'confidenceInterval' in metricData ? metricData.confidenceInterval : 'N/A';
+            
+            return (
+              <div key={index} className="text-sm">
+                <p>
+                  {entry.name}: {entry.value}
+                  {!isReal && <span className="ml-2 text-yellow-500">(Mock Data)</span>}
+                </p>
+                <p className="text-gray-400 text-xs mt-1">
+                  Source: {source}
+                  {confidence !== 'N/A' && ` (${confidence})`}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="bg-gray-800 rounded-lg p-6">
       <h3 className="text-xl font-semibold mb-4">Metric Comparison Radar</h3>

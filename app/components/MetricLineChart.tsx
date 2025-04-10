@@ -22,7 +22,10 @@ interface MetricLineChartProps {
 
 const MetricLineChart: React.FC<MetricLineChartProps> = ({ data, metrics }) => {
   const chartData = data.map(state => {
-    const result: any = { name: state.name };
+    const result: any = { 
+      name: state.name,
+      stateCode: state.stateCode
+    };
     
     metrics.forEach(metric => {
       const metricData = state[metric.id as keyof StateData];
@@ -36,11 +39,20 @@ const MetricLineChart: React.FC<MetricLineChartProps> = ({ data, metrics }) => {
     return result;
   });
 
+  const formatXAxis = (value: string, index: number) => {
+    const state = chartData[index];
+    // If there are more than 3 states being compared or name length > 10, use abbreviations
+    return (data.length > 3 || state.name.length > 10) ? state.stateCode : state.name;
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const stateData = data.find(state => state.name === label);
+      const displayName = stateData ? `${stateData.name} (${stateData.stateCode})` : label;
+
       return (
         <div className="bg-gray-800 p-4 rounded-lg shadow-lg max-w-sm">
-          <p className="font-semibold text-lg mb-2">{label}</p>
+          <p className="font-semibold text-lg mb-2">{displayName}</p>
           {payload.map((entry: any, index: number) => {
             const metric = metrics.find(m => m.id === entry.dataKey);
             const value = typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value;
@@ -88,6 +100,7 @@ const MetricLineChart: React.FC<MetricLineChartProps> = ({ data, metrics }) => {
             dataKey="name"
             stroke="#9CA3AF"
             tick={{ fill: '#9CA3AF' }}
+            tickFormatter={formatXAxis}
           />
           <YAxis
             stroke="#9CA3AF"

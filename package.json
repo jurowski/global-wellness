@@ -10,9 +10,13 @@
     "url": "https://github.com/jurowski/global-wellness.git"
   },
   "scripts": {
-    "dev": "node scripts/kill-ports.js && next dev",
-    "build": "npm run generate-icons && next build",
-    "start": "next start",
+    "dev": "node scripts/kill-ports.js && next dev -p 3000",
+    "dev:clean": "node scripts/kill-ports.js && rm -rf .next && rm -rf node_modules/.cache && npm ci --legacy-peer-deps && next build && next dev -p 3000",
+    "dev:reset": "node scripts/kill-ports.js && rm -rf .next node_modules/.cache && npm ci --legacy-peer-deps && next build && next dev -p 3000",
+    "dev:fresh": "node scripts/kill-ports.js && rm -rf .next && rm -rf node_modules/.cache && next dev -p 3000",
+    "build": "next build",
+    "build:clean": "node scripts/kill-ports.js && rm -rf .next node_modules/.cache && npm ci --legacy-peer-deps && next build",
+    "start": "node scripts/kill-ports.js && next start -p 3000",
     "lint": "next lint",
     "generate-icons": "node scripts/generate-icons.js",
     "test": "jest",
@@ -21,7 +25,8 @@
     "clean:test": "rm -rf tests/e2e/test-results/ playwright-report/ error-state-*.png graphql-error-*.png test-failure-*.png test.log",
     "clean:all": "rm -rf .next node_modules coverage .nyc_output && npm run clean:test",
     "test:ci": "npm run clean:test && NODE_ENV=test npx playwright test tests/e2e/graphql.test.ts",
-    "monitor:state": "node scripts/monitor-state-comparison.js"
+    "monitor:state": "node scripts/monitor-state-comparison.js",
+    "deploy:public": "vercel --prod --public --name global-wellness-public"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -32,6 +37,7 @@
     "@stripe/stripe-js": "^7.0.0",
     "@swc/helpers": "^0.5.15",
     "@tailwindcss/typography": "^0.5.10",
+    "@testing-library/dom": "^10.4.0",
     "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^0.27.3",
     "@vercel/speed-insights": "^1.2.0",
@@ -44,12 +50,14 @@
     "puppeteer": "^24.6.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-globe.gl": "^2.33.2",
     "react-smooth": "^2.0.4",
     "react-transition-group": "^4.4.5",
-    "recharts": "^2.12.2",
+    "recharts": "^2.15.2",
     "resolve-cwd": "^3.0.0",
     "source-map-support": "^0.5.21",
     "stripe": "^18.0.0",
+    "three": "^0.175.0",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {

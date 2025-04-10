@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Global Wellness Dashboard',
+  title: 'Global Wellness Countries',
   description: 'Compare wellness metrics across countries',
 };
 

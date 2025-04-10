@@ -16,7 +16,7 @@ export default function Methodology() {
               href="/"
               className="text-accent-primary hover:text-accent-secondary transition-colors"
             >
-              Back to Dashboard
+              Back to Countries
             </Link>
           </div>
         </div>

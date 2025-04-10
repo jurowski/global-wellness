@@ -1,3 +1,4 @@
+// Service worker temporarily disabled for troubleshooting
 const CACHE_NAME = 'global-wellness-v1';
 const STATIC_ASSETS = [
   '/',
@@ -7,6 +8,8 @@ const STATIC_ASSETS = [
   '/donors'
 ];
 
+// All event listeners commented out for debugging
+/* 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -59,4 +62,5 @@ self.addEventListener('fetch', (event) => {
       );
     })
   );
-}); 
+});
+*/ 

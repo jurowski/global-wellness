@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="space-y-12">
       <section>
-        <h1 className="text-3xl font-bold mb-8">Global Wellness Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-8">Global Wellness Countries</h1>
         <CountryComparison />
       </section>
 

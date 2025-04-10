@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+  
+[build.environment]
+  NODE_VERSION = "18"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[context.production.environment]
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51RB2q2PPrCzV7JNoRZX79EpHgDUpLwHLKYBvbBqPGh2RCsLJxucsE0Oh08N9FsrzfzzjNJJUpa6MCKdk5C84y9hf00DFHT8YTA"
+  NEXT_PUBLIC_OPENCAGE_API_KEY = "3394e988b92c4a769472028915eabf89" 

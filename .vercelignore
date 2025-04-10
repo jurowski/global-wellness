@@ -59,4 +59,23 @@ next-env.d.ts
 
 # IDE
 .idea/
-.vscode/ 
+.vscode/
+
+# CDK related files
+cdk/
+temp-cdk/
+cdk.out/
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+docs/
+*.md
+LICENSE 

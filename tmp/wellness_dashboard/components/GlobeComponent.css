@@ -1,0 +1,56 @@
+.globe-wrapper {
+  position: relative;
+  height: 500px;
+}
+
+.globe-metric-toggle {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  background-color: #1e293b;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.globe-button {
+  background-color: #334155;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.globe-button:hover {
+  background-color: #475569;
+}
+
+.globe-button.active {
+  background-color: #06b6d4;
+}
+
+.globe-details {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: #1e293b;
+  color: white;
+  padding: 16px;
+  width: 240px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  z-index: 10;
+}
+
+.globe-details h4 {
+  font-size: 18px;
+  color: #22d3ee;
+  margin-bottom: 8px;
+}

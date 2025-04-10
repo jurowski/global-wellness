@@ -23,10 +23,10 @@ export default function Header() {
             </div>
             <nav className="ml-6 flex space-x-8">
               <a
-                href="/"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/')}`}
+                href="/countries"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/countries')}`}
               >
-                Dashboard
+                Countries
               </a>
               <a
                 href="/state-comparison"
@@ -35,8 +35,8 @@ export default function Header() {
                 US States
               </a>
               <a
-                href="/admin/fetchers"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/admin/fetchers')}`}
+                href="/data-fetchers"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/data-fetchers')}`}
               >
                 Data Fetchers
               </a>

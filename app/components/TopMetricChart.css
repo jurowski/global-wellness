@@ -1,0 +1,14 @@
+.chart-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 32px auto 0;
+  font-family: sans-serif;
+}
+
+.chart-title {
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  color: #22d3ee;
+  margin-bottom: 16px;
+}
