@@ -1,6 +1,7 @@
 .globe-wrapper {
   position: relative;
-  height: 500px;
+  width: 100px;
+  height: 100px;
 }
 
 .globe-metric-toggle {
@@ -42,7 +43,7 @@
   background-color: #1e293b;
   color: white;
   padding: 16px;
-  width: 240px;
+  width: 40px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   font-size: 14px;
@@ -53,4 +54,11 @@
   font-size: 18px;
   color: #22d3ee;
   margin-bottom: 8px;
+}
+
+/* // GLOBE */
+.scene-container {
+  width: 400px !important; /* Adjust as needed */
+  height: 400px !important; /* Adjust as needed */
+  /* contain: layout style size; */
 }

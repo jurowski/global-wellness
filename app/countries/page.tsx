@@ -4,6 +4,9 @@ import { useState } from 'react';
 import SelectorCountryComparison from '../components/SelectorCountryComparison';
 import MetricRadarChart from '../components/MetricRadarChart';
 import MetricHeatmap from '../components/MetricHeatmap';
+import dynamic from 'next/dynamic';
+import WellnessDashboard from '../components/WellnessDashboard';
+const MiniGlobe = dynamic(() => import('../components/MiniGlobe'), { ssr: false });
 
 const METRICS = [
   { id: 'happiness', label: 'Happiness', color: '#4CAF50' },
@@ -12,6 +15,26 @@ const METRICS = [
   { id: 'work_life', label: 'Work Life', color: '#9C27B0' },
   { id: 'social_support', label: 'Social Support', color: '#FF5722' }
 ];
+
+const COUNTRY_CODE_MAPPING = {
+  'US': 'United States',
+  'JP': 'Japan',
+  'FI': 'Finland',
+  'DK': 'Denmark',
+  'IS': 'Iceland',
+  'IL': 'Israel',
+  'NL': 'Netherlands',
+  'SE': 'Sweden',
+  'NO': 'Norway',
+  'CH': 'Switzerland',
+  'LU': 'Luxembourg',
+  'NZ': 'New Zealand',
+  'AT': 'Austria',
+  'AU': 'Australia',
+  'CA': 'Canada',
+  'IE': 'Ireland',
+  'CR': 'Costa Rica'
+};
 
 export default function Countries() {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['happiness', 'healthcare', 'education', 'work_life']);
@@ -28,13 +51,32 @@ export default function Countries() {
     });
   };
 
-  const handleCountryChange = (country1: string, country2: string) => {
-    setSelectedCountries([country1, country2]);
+  const handleCountryChange = (country: string) => {
+    setSelectedCountries(current => {
+      const updatedCountries = current.includes(country)
+        ? current.filter(c => c !== country)
+        : [...current, country];
+      console.log('Updated selectedCountries:', updatedCountries);
+      return updatedCountries;
+    });
+  };
+
+  const handleCountryButtonClick = (countryCode: string) => {
+    console.log('Country button clicked:', countryCode);
+    // Convert country code to full name
+    const countryName = Object.entries(COUNTRY_CODE_MAPPING).find(([_, code]) => code === countryCode)?.[0] || countryCode;
+    handleCountryChange(countryName);
   };
 
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Mini Globe with selected countries */}
+        <div className="mb-6">
+          {/* <MiniGlobe selectedCountries={selectedCountries} /> */}
+          <WellnessDashboard />
+        </div>
+
         {/* Metric Selectors */}
         <div className="flex flex-wrap gap-2 mb-6">
           {METRICS.map((metric) => (
@@ -67,7 +109,7 @@ export default function Countries() {
         <div className="mb-12">
           <SelectorCountryComparison
             selectedMetrics={selectedMetrics}
-            onCountryChange={handleCountryChange}
+            onCountryChange={handleCountryButtonClick}
           />
         </div>
 

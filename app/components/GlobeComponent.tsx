@@ -37,20 +37,22 @@ export default function GlobeComponent({ onMetricChange }: GlobeProps) {
   useEffect(() => {
     if (globeEl.current) {
       globeEl.current.controls().distance = 1600;
+      // globeEl.current.controls().distance = 800;
       globeEl.current.controls().enableZoom = false;
     }
   }, [countries]);
 
   return (
-    <div className="h-[400px]">
+    <div style={{ width: '400px', height: '400px' }}>
       <Globe
         ref={globeEl}
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+        // globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+        globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
         backgroundColor="rgba(0,0,0,0)"
         pointsData={countries}
         pointLat={(d: object) => (d as CountryPoint).lat}
         pointLng={(d: object) => (d as CountryPoint).lng}
-        pointAltitude={(d: object) => (d as CountryPoint).size / 10}
+        pointAltitude={(d: object) => (d as CountryPoint).size / 50}
         pointColor={(d: object) => (d as CountryPoint).color}
         pointRadius={(d: object) => (d as CountryPoint).size * 0.4}
         onPointClick={(point: object) => {

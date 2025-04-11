@@ -181,24 +181,18 @@ export default function SelectorCountryComparison({ selectedMetrics = ['happines
   // Set initial countries once data is loaded
   useEffect(() => {
     if (!country1 && !country2 && countriesData?.countries?.length > 0) {
-      const usCountry = countriesData.countries.find((c: any) => c.countryCode === 'US');
-      const fiCountry = countriesData.countries.find((c: any) => c.countryCode === 'FI');
-      
-      if (usCountry && fiCountry) {
-        setCountry1(usCountry.name);
-        setCountry2(fiCountry.name);
-        setSelectedCountries(['US', 'FI']);
-        
-        // Initialize dropdown values
-        const newDropdownValues = [...dropdownValues];
-        newDropdownValues[0] = 'US';
-        newDropdownValues[1] = 'FI';
-        setDropdownValues(newDropdownValues);
-      } else {
-        console.warn('Could not find US or FI in country data');
-      }
+        const defaultCountry1 = localStorage.getItem('country1') || countriesData.countries[0]?.name || '';
+        const defaultCountry2 = localStorage.getItem('country2') || countriesData.countries[1]?.name || '';
+        setCountry1(defaultCountry1);
+        setCountry2(defaultCountry2);
+        setSelectedCountries([defaultCountry1, defaultCountry2].filter(Boolean));
     }
-  }, [countriesData, country1, country2, dropdownValues]);
+  }, [countriesData, country1, country2]);
+
+  useEffect(() => {
+    localStorage.setItem('country1', country1);
+    localStorage.setItem('country2', country2);
+  }, [country1, country2]);
 
   // Define query variables based on the selector mode
   const countryCodes = selectorMode === 'normal'
@@ -279,9 +273,14 @@ export default function SelectorCountryComparison({ selectedMetrics = ['happines
   }, [selectedCountries, selectorMode, dropdownValues]);
 
   const handleCountrySelect = (countryCode: string) => {
+    console.log('Country selected:', countryCode);
     if (selectedCountries.includes(countryCode)) {
-      setSelectedCountries(selectedCountries.filter(code => code !== countryCode));
+      const updatedCountries = selectedCountries.filter(code => code !== countryCode);
+      setSelectedCountries(updatedCountries);
       setCountriesWithErrors(countriesWithErrors.filter(code => code !== countryCode));
+      if (updatedCountries.length === 0) {
+        onCountryChange?.('', '');
+      }
     } else if (selectedCountries.length < 5) {
       setSelectedCountries([...selectedCountries, countryCode]);
     }
@@ -397,7 +396,7 @@ export default function SelectorCountryComparison({ selectedMetrics = ['happines
                 className="w-full p-2 rounded bg-gray-800 border border-gray-700"
               >
                 <option value="">Select a country</option>
-                {countriesData?.countries?.map((country: any) => (
+                {[...countriesData?.countries]?.sort((a: any, b: any) => a.name.localeCompare(b.name)).map((country: any) => (
                   <option key={country.countryCode} value={country.name}>
                     {country.name}
                   </option>
@@ -416,7 +415,7 @@ export default function SelectorCountryComparison({ selectedMetrics = ['happines
                 className="w-full p-2 rounded bg-gray-800 border border-gray-700"
               >
                 <option value="">Select a country</option>
-                {countriesData?.countries?.map((country: any) => (
+                {[...countriesData?.countries]?.sort((a: any, b: any) => a.name.localeCompare(b.name)).map((country: any) => (
                   <option key={country.countryCode} value={country.name}>
                     {country.name}
                   </option>
@@ -510,10 +509,10 @@ export default function SelectorCountryComparison({ selectedMetrics = ['happines
                   disabled={countriesLoading}
                 >
                   <option value="">Select a country</option>
-                  {countriesData?.countries?.map((country: any) => (
+                  {[...countriesData?.countries]?.sort((a: any, b: any) => a.name.localeCompare(b.name)).map((country: any) => (
                     <option 
                       key={country.countryCode} 
-                      value={country.countryCode}
+                      value={country.name}
                       disabled={selectedCountries.includes(country.countryCode) && !dropdownValues[index].includes(country.countryCode)}
                     >
                       {country.name} ({country.countryCode})
@@ -709,4 +708,4 @@ export default function SelectorCountryComparison({ selectedMetrics = ['happines
       )}
     </div>
   );
-} 
+}
